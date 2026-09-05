@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>라이언의 기록 분석 ver.23</title>
+  <title>라이언의 기록 분석 모바일 ver.16</title>
   <style>
 /* Noto Sans KR Variable — SIL Open Font License 1.1; embedded for offline Korean rendering */
 /* noto-sans-kr-[0]-wght-normal */
@@ -1767,7 +1767,7 @@
     }
 
 
-    /* ver.13: 서울대학교 관점은 ver.08형 컴팩트 카드로 복원하고 문맥 결속 판정을 강화 */
+    /* ver.11: 서울대학교 관점은 ver.08형 컴팩트 카드로 복원하고 문맥 결속 판정을 강화 */
     #snuEvaluationPanel .evaluation-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
     #snuEvaluationPanel .evaluation-item{min-height:0;padding:14px;display:flex;flex-direction:column;gap:8px}
     #snuEvaluationPanel .evaluation-item-head{margin:0}
@@ -2488,8 +2488,50 @@
 </style>
 
 
+<style id="mobile-ver02-style">
+/* Mobile ver.02: single-column layout with direct result download. */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+body.mobile-build{font-size:15px}
+.mobile-build .app-shell{width:100%;max-width:100%;margin:0;padding:10px 10px 28px;overflow:hidden}
+.mobile-build .topbar{display:grid;grid-template-columns:1fr;gap:10px;align-items:start}
+.mobile-build .brand{min-width:0;flex-wrap:wrap}.mobile-build .brand h1{font-size:1.17rem}.mobile-build .logo{width:46px;height:46px}
+.mobile-build .privacy-pill{justify-self:start;max-width:100%}
+.mobile-build .intro{font-size:.9rem;line-height:1.7;padding:0 2px}
+.mobile-build .primary-tabs{position:sticky;top:0;z-index:35;display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px;background:rgba(24,3,16,.94);backdrop-filter:blur(10px)}
+.mobile-build .primary-tab{width:100%;min-width:0;padding:12px 8px;font-size:.96rem}
+.mobile-build .global-tools,.mobile-build .setup-grid,.mobile-build .result-top,.mobile-build .flow-grid,.mobile-build .review-case-grid,.mobile-build .evaluation-grid,.mobile-build .profile-grid,.mobile-build .standard-detail-grid,.mobile-build .logic-chain,.mobile-build .stat-grid,.mobile-build .usage-grid,.mobile-build .modal-fields{grid-template-columns:1fr!important}
+.mobile-build .global-tools{position:static;padding:12px}.mobile-build .global-tool-group{min-width:0}.mobile-build .font-size-group{max-width:none}
+.mobile-build .level-buttons{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.mobile-build .level-button{min-width:0;padding:10px 4px;font-size:.9rem}.mobile-build .level-button-caption{font-size:.68rem}
+.mobile-build .card,.mobile-build .usage-card,.mobile-build .result-card,.mobile-build .panel{padding:15px;border-radius:16px}
+.mobile-build .section{padding:14px 12px}.mobile-build .section-head{display:block}.mobile-build .section-head>*{min-width:0}
+.mobile-build textarea{min-height:330px;font-size:.94rem;line-height:1.72}
+.mobile-build .action-row,.mobile-build .result-tools,.mobile-build .modal-actions{display:grid;grid-template-columns:1fr;gap:8px}.mobile-build .action-row button,.mobile-build .result-tools button,.mobile-build .modal-actions button{width:100%}
+.mobile-build .flow-item,.mobile-build .profile-item,.mobile-build .standard-detail-card,.mobile-build .evaluation-item,.mobile-build .review-case-card{min-width:0;width:100%}
+.mobile-build .logic-step::after{display:none!important}
+.mobile-build .table-hint{display:none}
+.mobile-build .table-wrap,.mobile-build .usage-table-wrap{overflow:visible!important;max-width:100%;border:0}
+.mobile-build table,.mobile-build thead,.mobile-build tbody,.mobile-build tr,.mobile-build th,.mobile-build td{display:block;width:100%!important;max-width:100%;min-width:0!important;box-sizing:border-box}
+.mobile-build table{table-layout:auto!important;min-width:0!important;border:0;background:transparent}
+.mobile-build thead{position:absolute;width:1px!important;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mobile-build tbody{display:grid;gap:12px}
+.mobile-build tr{padding:13px;border:1px solid var(--line);border-radius:14px;background:rgba(30,7,22,.72);overflow:hidden}
+.mobile-build th,.mobile-build td{padding:8px 0!important;border:0!important;text-align:left!important;overflow-wrap:anywhere;word-break:keep-all;white-space:normal}
+.mobile-build th[data-label]::before,.mobile-build td[data-label]::before{content:attr(data-label);display:block;margin-bottom:5px;color:#ff8fc1;font-size:.73rem;font-weight:950;letter-spacing:.03em}
+.mobile-build .detail-feedback{min-width:0}.mobile-build .detail-verdict{min-width:0}.mobile-build .score-cell{width:100%}
+.mobile-build .threshold-cards{grid-template-columns:1fr}.mobile-build .rubric-matrix,.mobile-build .compact-rubric{min-width:0!important}
+.mobile-build .usage-change-table td:first-child{font-weight:900;color:#ffd3e6}
+.mobile-build .abc-guide{grid-template-columns:1fr}
+.mobile-build .subject-dialog{width:calc(100vw - 12px);max-width:none;max-height:96vh;margin:3vh 6px;padding:0}.mobile-build .dialog-body{padding:14px}.mobile-build .dialog-head{padding:14px}
+.mobile-build .subject-settings-launcher{width:100%;min-width:0}
+.mobile-build .score-num{font-size:1rem}.mobile-build .grade-value{font-size:3.2rem}.mobile-build .panel-head{display:block}.mobile-build .panel-note{display:block;margin-top:6px}
+.mobile-build footer{padding:24px 4px 8px;text-align:center}
+.mobile-build *{max-width:100%}
+@media(min-width:560px){.mobile-build .flow-grid,.mobile-build .profile-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+</style>
+
+
   <style id="ver10-style">
-    /* ver.13: 서울대학교 관점 컴팩트 복원 및 맥락 결속 분석 강화 */
+    /* ver.11: 서울대학교 관점 컴팩트 복원 및 맥락 결속 분석 강화 */
     .snu-panel-intro{margin:0 0 14px;color:var(--muted);line-height:1.65}
     .snu-result-item{align-content:start}
     .snu-question{margin:0;padding:10px 12px;border-radius:11px;background:rgba(255,111,178,.075);color:var(--text);font-weight:800;line-height:1.55}
@@ -2672,133 +2714,71 @@
     }
     @media(max-width:390px){.level-button-caption{font-size:.72rem}.mode-icon{display:none}}
 
-    /* ver.16: vivid PC galaxy, mode-reactive color system, and immediate work feedback */
-    body:not(.mobile-build) {
-      position: relative;
-      overflow-x: hidden;
-      background: linear-gradient(155deg,#12030d 0%,#26091c 48%,#10030c 100%);
-      transition: background-color .65s ease, box-shadow .65s ease;
-    }
-    body:not(.mobile-build) .app-shell { position: relative; z-index: 2; }
-    .galaxy-field {
-      position: fixed;
-      inset: -18vmax;
-      z-index: 0;
-      overflow: hidden;
-      pointer-events: none;
-      opacity: .94;
+    /* mobile ver.09: clear mode state and immediate analysis feedback */
+    body.mobile-build[data-evaluation-mode="strict"] {
       background:
-        radial-gradient(circle at 18% 24%, rgba(255,255,255,.96) 0 1px, transparent 2.2px),
-        radial-gradient(circle at 72% 18%, rgba(255,214,237,.92) 0 1.4px, transparent 2.6px),
-        radial-gradient(circle at 82% 68%, rgba(255,255,255,.82) 0 1px, transparent 2px),
-        radial-gradient(circle at 38% 82%, rgba(255,176,216,.88) 0 1.2px, transparent 2.4px),
-        radial-gradient(circle at 50% 48%, rgba(255,35,145,.30), transparent 36%);
-      background-size: 130px 130px, 190px 190px, 155px 155px, 230px 230px, 100% 100%;
-      animation: v16GalaxyDrift 18s ease-in-out infinite alternate;
-      transition: filter .8s ease, opacity .8s ease;
+        radial-gradient(circle at 12% -4%, rgba(238,48,73,.25), transparent 34%),
+        linear-gradient(160deg,#160306 0%,#2b0710 48%,#100207 100%);
     }
-    .galaxy-field::before,
-    .galaxy-field::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: 48%;
-      width: min(138vmax, 1900px);
-      aspect-ratio: 1.65;
-      border-radius: 50%;
-      transform: translate(-50%,-50%) rotate(-12deg);
-      transform-origin: center;
-      -webkit-mask-image: radial-gradient(ellipse at center, #000 0 13%, rgba(0,0,0,.96) 22%, rgba(0,0,0,.70) 48%, transparent 73%);
-      mask-image: radial-gradient(ellipse at center, #000 0 13%, rgba(0,0,0,.96) 22%, rgba(0,0,0,.70) 48%, transparent 73%);
-      animation: v16GalaxySpin 34s linear infinite;
-      transition: opacity .75s ease;
-    }
-    .galaxy-field::before {
-      opacity: 1;
-      background:
-        radial-gradient(ellipse at center, rgba(255,248,253,.96) 0 2.5%, rgba(255,95,176,.86) 7%, transparent 17%),
-        repeating-conic-gradient(from 8deg at 50% 50%, rgba(255,79,167,.88) 0 5deg, rgba(255,174,216,.34) 8deg 13deg, transparent 17deg 28deg),
-        radial-gradient(ellipse at center, rgba(255,42,148,.55) 0 27%, rgba(171,29,110,.24) 47%, transparent 71%);
-      box-shadow: 0 0 120px rgba(255,40,147,.42), inset 0 0 90px rgba(255,207,232,.22);
-    }
-    .galaxy-field::after {
-      opacity: 0;
-      background:
-        radial-gradient(ellipse at center, rgba(255,250,247,.98) 0 2.5%, rgba(255,83,83,.92) 7%, transparent 17%),
-        repeating-conic-gradient(from 8deg at 50% 50%, rgba(255,36,58,.90) 0 5deg, rgba(255,128,112,.36) 8deg 13deg, transparent 17deg 28deg),
-        radial-gradient(ellipse at center, rgba(255,28,52,.58) 0 27%, rgba(137,0,21,.30) 47%, transparent 71%);
-      box-shadow: 0 0 135px rgba(255,25,49,.50), inset 0 0 96px rgba(255,188,178,.24);
-      animation-direction: reverse;
-    }
-    body:not(.mobile-build)[data-evaluation-mode="strict"] {
-      background: linear-gradient(155deg,#150203 0%,#350609 48%,#100102 100%);
-      box-shadow: inset 0 0 180px rgba(184,0,27,.20);
-    }
-    body:not(.mobile-build)[data-evaluation-mode="strict"] .galaxy-field::before { opacity: .14; }
-    body:not(.mobile-build)[data-evaluation-mode="strict"] .galaxy-field::after { opacity: 1; }
-    body[data-evaluation-mode="strict"] .level-buttons.dual-mode .level-button.active {
-      border-color: #ff8a91;
-      background: linear-gradient(135deg,#ee3349,#a70e2a 58%,#5e0719);
-      box-shadow: 0 0 0 3px rgba(255,65,81,.20),0 16px 36px rgba(183,12,43,.34),inset 0 1px 0 rgba(255,255,255,.22);
+    body.mobile-build[data-evaluation-mode="strict"] .level-buttons.dual-mode .level-button.active {
+      border-color:#ff8a91;
+      background:linear-gradient(135deg,#ee3349,#a70e2a 58%,#5e0719);
+      box-shadow:0 0 0 3px rgba(255,65,81,.20),0 14px 30px rgba(183,12,43,.30),inset 0 1px 0 rgba(255,255,255,.22);
     }
     .primary-button.is-analyzing {
-      cursor: progress;
-      background: linear-gradient(105deg,#bd245f,#f45a9b,#bd245f);
-      background-size: 220% 100%;
-      animation: v16AnalyzePulse .85s linear infinite;
-      box-shadow: 0 0 0 4px rgba(255,92,157,.18),0 14px 34px rgba(172,31,91,.34);
+      cursor:progress;
+      background:linear-gradient(105deg,#bd245f,#f45a9b,#bd245f);
+      background-size:220% 100%;
+      animation:v09AnalyzePulse .85s linear infinite;
+      box-shadow:0 0 0 4px rgba(255,92,157,.18),0 12px 30px rgba(172,31,91,.30);
     }
-    @keyframes v16GalaxySpin {
-      from { transform: translate(-50%,-50%) rotate(-12deg) scale(1); }
-      50% { transform: translate(-50%,-50%) rotate(168deg) scale(1.06); }
-      to { transform: translate(-50%,-50%) rotate(348deg) scale(1); }
-    }
-    @keyframes v16GalaxyDrift {
-      from { transform: translate3d(-1.6%,1%,0) scale(1); }
-      to { transform: translate3d(1.8%,-1.3%,0) scale(1.035); }
-    }
-    @keyframes v16AnalyzePulse { to { background-position: -220% 0; } }
-    @media(max-width:900px) { .galaxy-field { opacity: .70; } }
-    @media print { .galaxy-field { display:none !important; } }
+    @keyframes v09AnalyzePulse { to { background-position:-220% 0; } }
 
-    /* ver.17: context-first rubric, contained controls, and soft nebula motion */
-    .topbar {
-      display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
-      align-items:center;
-      gap:14px;
-      padding:12px 14px;
-      border-radius:22px;
+    /* mobile ver.10: context guide, contained controls, and full mode tint */
+    .mobile-build .topbar {
+      grid-template-columns:minmax(0,1fr) !important;
+      align-items:stretch !important;
+      gap:10px !important;
+      padding:11px 12px;
+      border-radius:18px;
       overflow:hidden;
     }
-    .brand { min-width:0; flex-wrap:nowrap; overflow:hidden; }
-    .brand h1 { min-width:0; overflow-wrap:anywhere; }
-    .logo { flex:0 0 auto; }
-    :is(button,.back-home-button,.subject-settings-button) {
+    .mobile-build .brand { min-width:0; flex-wrap:wrap; overflow:hidden; }
+    .mobile-build .brand h1 { min-width:0; overflow-wrap:anywhere; }
+    .mobile-build .logo { flex:0 0 auto; }
+    .mobile-build .back-home-button {
+      width:100%;
+      min-width:0;
+      max-width:100%;
+      justify-self:stretch;
+      white-space:normal;
+      overflow-wrap:anywhere;
+    }
+    .mobile-build :is(button,.subject-settings-button) {
       min-width:0;
       max-width:100%;
       overflow-wrap:anywhere;
     }
-    :is(.segmented,.button-group,.action-row,.result-tools,.dialog-actions) > * { min-width:0; }
-    .topbar .back-home-button:hover { transform:none; }
-    .usage-context-example {
+    .mobile-build :is(.segmented,.button-group,.action-row,.result-tools,.dialog-actions) > * { min-width:0; }
+    .mobile-build .back-home-button:hover { transform:none; }
+    .mobile-build .usage-context-example {
       position:relative;
       overflow:hidden;
       border-color:rgba(255,126,184,.48);
       background:linear-gradient(145deg,rgba(74,18,49,.90),rgba(28,7,21,.96));
     }
-    .usage-context-example::after {
+    .mobile-build .usage-context-example::after {
       content:"";
       position:absolute;
-      width:240px;
+      width:210px;
       aspect-ratio:1;
       right:-105px;
-      top:-115px;
+      top:-100px;
       border-radius:50%;
-      background:radial-gradient(circle,rgba(255,97,168,.20),transparent 70%);
+      background:radial-gradient(circle,rgba(255,97,168,.21),transparent 70%);
       pointer-events:none;
     }
-    .usage-context-example .pink-emphasis {
+    .mobile-build .usage-context-example .pink-emphasis {
       display:inline;
       padding:.05em .24em;
       border-radius:.36em;
@@ -2807,80 +2787,50 @@
       box-decoration-break:clone;
       -webkit-box-decoration-break:clone;
     }
-    .usage-context-flow {
+    .mobile-build .usage-context-flow {
       display:flex;
       flex-wrap:wrap;
       gap:7px;
       margin:12px 0 0;
     }
-    .usage-context-flow span {
+    .mobile-build .usage-context-flow span {
       padding:6px 9px;
       border:1px solid rgba(255,137,187,.34);
       border-radius:999px;
       background:rgba(255,98,162,.09);
       color:#ffe2ee;
-      font-size:.78rem;
+      font-size:.76rem;
       font-weight:850;
     }
-    .galaxy-field {
-      inset:-12vmax;
-      contain:paint;
-      will-change:transform,opacity;
-      opacity:.92;
+    body.mobile-build {
       background:
-        radial-gradient(circle at 12% 18%,rgba(255,255,255,.94) 0 1px,transparent 2px),
-        radial-gradient(circle at 64% 12%,rgba(255,211,236,.88) 0 1.2px,transparent 2.4px),
-        radial-gradient(circle at 84% 72%,rgba(255,255,255,.82) 0 1px,transparent 2px),
-        radial-gradient(circle at 32% 82%,rgba(255,174,218,.82) 0 1.1px,transparent 2.2px),
-        radial-gradient(ellipse at 48% 48%,rgba(255,32,142,.22),transparent 42%);
-      background-size:137px 137px,211px 211px,173px 173px,251px 251px,100% 100%;
-      animation:v17StarDrift 26s ease-in-out infinite alternate;
+        radial-gradient(ellipse at 18% -8%,rgba(255,76,167,.28),transparent 42%),
+        radial-gradient(ellipse at 88% 18%,rgba(142,71,255,.18),transparent 38%),
+        radial-gradient(ellipse at 45% 82%,rgba(255,73,174,.12),transparent 43%),
+        linear-gradient(155deg,#10020d 0%,#26081e 52%,#0e020b 100%);
     }
-    .galaxy-field::before,
-    .galaxy-field::after {
-      left:50%;
-      top:48%;
-      width:min(126vmax,1760px);
-      aspect-ratio:1.45;
+    .mobile-build .app-shell::after {
+      content:"";
+      position:fixed;
+      inset:-28vmax;
+      z-index:-1;
+      pointer-events:none;
+      opacity:.80;
       border-radius:50%;
-      box-shadow:none;
-      background-blend-mode:screen;
-      -webkit-mask-image:radial-gradient(ellipse at center,#000 0 18%,rgba(0,0,0,.92) 40%,rgba(0,0,0,.48) 62%,transparent 79%);
-      mask-image:radial-gradient(ellipse at center,#000 0 18%,rgba(0,0,0,.92) 40%,rgba(0,0,0,.48) 62%,transparent 79%);
+      background:
+        radial-gradient(circle at 31% 37%,rgba(255,246,252,.58) 0 1px,transparent 2px),
+        radial-gradient(circle at 67% 54%,rgba(255,179,221,.46) 0 1px,transparent 2px),
+        radial-gradient(ellipse at 50% 50%,rgba(255,47,153,.25),transparent 43%),
+        radial-gradient(ellipse at 38% 46%,rgba(167,74,255,.16),transparent 34%);
+      background-size:149px 149px,211px 211px,100% 100%,100% 100%;
       will-change:transform,opacity;
-      animation:v17NebulaOrbit 46s linear infinite;
+      animation:v10MobileNebula 30s ease-in-out infinite alternate;
     }
-    .galaxy-field::before {
-      opacity:.96;
-      background:
-        radial-gradient(ellipse at 50% 50%,rgba(255,249,253,.90) 0 2%,rgba(255,131,193,.54) 7%,transparent 19%),
-        radial-gradient(ellipse at 34% 43%,rgba(255,61,157,.66),transparent 27%),
-        radial-gradient(ellipse at 67% 55%,rgba(187,65,255,.38),transparent 32%),
-        radial-gradient(ellipse at 52% 69%,rgba(255,118,199,.34),transparent 38%),
-        conic-gradient(from 22deg at 50% 50%,transparent 0 11%,rgba(255,111,192,.13) 18%,transparent 30% 55%,rgba(204,91,255,.10) 65%,transparent 78%);
+    @keyframes v10MobileNebula {
+      from { transform:translate3d(-1.2%,.8%,0) rotate(-4deg) scale(1); opacity:.70; }
+      to { transform:translate3d(1.2%,-.9%,0) rotate(5deg) scale(1.035); opacity:.94; }
     }
-    .galaxy-field::after {
-      opacity:.02;
-      background:
-        radial-gradient(ellipse at 50% 50%,rgba(255,249,247,.92) 0 2%,rgba(255,108,109,.62) 8%,transparent 20%),
-        radial-gradient(ellipse at 33% 44%,rgba(255,39,67,.70),transparent 29%),
-        radial-gradient(ellipse at 69% 57%,rgba(255,104,72,.40),transparent 33%),
-        radial-gradient(ellipse at 53% 70%,rgba(175,0,30,.42),transparent 39%),
-        conic-gradient(from 18deg at 50% 50%,transparent 0 14%,rgba(255,92,94,.13) 21%,transparent 34% 58%,rgba(255,56,74,.11) 68%,transparent 81%);
-      animation-direction:reverse;
-    }
-    @keyframes v17StarDrift {
-      from { transform:translate3d(-1.2%,.8%,0) scale(1); opacity:.84; }
-      to { transform:translate3d(1.4%,-1%,0) scale(1.025); opacity:1; }
-    }
-    @keyframes v17NebulaOrbit {
-      from { transform:translate(-50%,-50%) rotate(-14deg) scale(.98); }
-      50% { transform:translate(-50%,-50%) rotate(166deg) scale(1.055); }
-      to { transform:translate(-50%,-50%) rotate(346deg) scale(.98); }
-    }
-    body:not(.mobile-build)[data-evaluation-mode="strict"] .galaxy-field::before { opacity:.05; }
-    body:not(.mobile-build)[data-evaluation-mode="strict"] .galaxy-field::after { opacity:.98; }
-    body[data-evaluation-mode="strict"] {
+    body.mobile-build[data-evaluation-mode="strict"] {
       --pink:#f04458;
       --pink-dark:#ff6877;
       --pink-pale:rgba(239,55,79,.18);
@@ -2889,231 +2839,101 @@
       --v15-hot:#ff4058;
       --v15-hot-2:#b80f2d;
       --v15-line:rgba(255,85,103,.46);
+      background:
+        radial-gradient(ellipse at 12% -6%,rgba(255,53,72,.31),transparent 42%),
+        radial-gradient(ellipse at 91% 20%,rgba(167,0,31,.24),transparent 38%),
+        linear-gradient(160deg,#160306 0%,#310812 50%,#0e0105 100%);
     }
-    body[data-evaluation-mode="strict"] :is(.topbar,.global-tools,.primary-tabs,.card,.panel,.usage-card,.evaluation-item,.review-case-card,.standard-detail-card,.flow-item,.profile-item,dialog.subject-dialog) {
+    body.mobile-build[data-evaluation-mode="strict"] .app-shell::after {
+      background:
+        radial-gradient(circle at 31% 37%,rgba(255,249,249,.60) 0 1px,transparent 2px),
+        radial-gradient(circle at 67% 54%,rgba(255,175,178,.48) 0 1px,transparent 2px),
+        radial-gradient(ellipse at 50% 50%,rgba(255,48,70,.30),transparent 43%),
+        radial-gradient(ellipse at 38% 46%,rgba(174,0,29,.20),transparent 34%);
+    }
+    body.mobile-build[data-evaluation-mode="strict"] :is(.topbar,.global-tools,.primary-tabs,.card,.panel,.usage-card,.evaluation-item,.review-case-card,.standard-detail-card,.flow-item,.profile-item,tr,dialog.subject-dialog) {
       border-color:rgba(255,84,102,.43);
       background:linear-gradient(145deg,rgba(67,8,20,.90),rgba(25,4,10,.96));
     }
-    body[data-evaluation-mode="strict"] :is(.primary-tab,.level-button,.font-button,.font-value,.choice,.ghost-button,.subject-settings-button,.back-home-button,.dialog-close,.count-chip,textarea,input,select) {
+    body.mobile-build[data-evaluation-mode="strict"] :is(.primary-tab,.level-button,.font-button,.font-value,.choice,.ghost-button,.subject-settings-button,.back-home-button,.dialog-close,.count-chip,textarea,input,select) {
       border-color:rgba(255,91,108,.49);
       background:linear-gradient(155deg,rgba(84,11,26,.94),rgba(36,5,12,.98));
       color:#fff0f2;
     }
-    body[data-evaluation-mode="strict"] :is(.primary-tab[aria-selected="true"],.level-button.active,.choice.active,.choice[aria-pressed="true"],.primary-button,.dialog-confirm) {
+    body.mobile-build[data-evaluation-mode="strict"] :is(.primary-tab[aria-selected="true"],.level-button.active,.choice.active,.choice[aria-pressed="true"],.primary-button,.dialog-confirm) {
       border-color:#ff9aa4;
       background:linear-gradient(135deg,#f13b51,#a80d2a 60%,#590719);
       box-shadow:0 0 0 3px rgba(255,67,86,.16),0 15px 34px rgba(139,4,31,.32);
       color:#fff;
     }
-    body[data-evaluation-mode="strict"] :is(.pink-emphasis,.level-guide strong,.panel-note,.evaluation-kicker,.tool-kicker,.launcher-label) { color:#ff9ca7; }
-    @media(max-width:560px) {
-      .topbar,
-      body.mobile-build .topbar {
-        grid-template-columns:1fr !important;
-        align-items:stretch !important;
-      }
-      .brand { flex-wrap:wrap; }
-      .back-home-button { width:100%; white-space:normal; justify-self:stretch !important; }
-      .button-group,.result-tools { display:grid; grid-template-columns:1fr; width:100%; }
+    body.mobile-build[data-evaluation-mode="strict"] :is(.pink-emphasis,.level-guide strong,.panel-note,.evaluation-kicker,.tool-kicker,.launcher-label) { color:#ff9ca7; }
+    body.mobile-build[data-evaluation-mode="strict"] :is(th[data-label],td[data-label])::before { color:#ff9ca7; }
+    @media(max-width:380px) {
+      .mobile-build .level-buttons.dual-mode { grid-template-columns:1fr; }
+      .mobile-build .brand h1 { font-size:1.05rem; }
     }
     @media(prefers-reduced-motion:reduce) {
-      .galaxy-field,.galaxy-field::before,.galaxy-field::after { animation:none !important; }
+      .mobile-build .app-shell::after { animation:none !important; }
     }
 
-    /* ver.18: GPU-friendly aurora, comet trails, and mode-reactive cosmic depth */
-    body {
-      --aurora-a:255,49,155;
-      --aurora-b:201,82,255;
-      --aurora-c:255,166,218;
-      --comet-core:255,245,252;
-      --comet-tail:255,105,188;
-    }
-    body[data-evaluation-mode="strict"] {
-      --aurora-a:255,31,67;
-      --aurora-b:255,86,45;
-      --aurora-c:191,0,42;
-      --comet-core:255,244,236;
-      --comet-tail:255,50,64;
-    }
-    .cosmic-stage {
-      position:fixed;
-      inset:0;
-      z-index:1;
-      overflow:hidden;
-      pointer-events:none;
-      contain:strict;
-      isolation:isolate;
-      mix-blend-mode:screen;
-    }
+    /* mobile ver.11: lightweight aurora, comet trails, and mode-reactive cosmic depth */
+    body { --aurora-a:255,49,155;--aurora-b:201,82,255;--aurora-c:255,166,218;--comet-core:255,245,252;--comet-tail:255,105,188; }
+    body[data-evaluation-mode="strict"] { --aurora-a:255,31,67;--aurora-b:255,86,45;--aurora-c:191,0,42;--comet-core:255,244,236;--comet-tail:255,50,64; }
+    .cosmic-stage { position:fixed;inset:0;z-index:1;overflow:hidden;pointer-events:none;contain:strict;isolation:isolate;mix-blend-mode:screen; }
+    .mobile-build .app-shell { position:relative;z-index:2; }
     .aurora-field,.comet-field,.cosmic-dust { position:absolute;inset:0; }
     .aurora-ribbon {
-      position:absolute;
-      left:-18vw;
-      width:136vw;
-      height:clamp(150px,29vh,360px);
-      border-radius:50%;
-      opacity:.40;
-      filter:blur(22px) saturate(1.35);
-      background:
-        linear-gradient(90deg,transparent 2%,rgba(var(--aurora-a),.08) 15%,rgba(var(--aurora-a),.72) 38%,rgba(var(--aurora-b),.62) 57%,rgba(var(--aurora-c),.48) 76%,transparent 98%);
-      will-change:transform,opacity;
-      transform-origin:center;
-      animation:v18AuroraSweep 17s ease-in-out infinite alternate;
-      transition:background .65s ease,opacity .65s ease;
+      position:absolute;left:-24vw;width:148vw;height:24vh;border-radius:50%;opacity:.26;
+      filter:blur(18px) saturate(1.28);
+      background:linear-gradient(90deg,transparent 2%,rgba(var(--aurora-a),.08) 15%,rgba(var(--aurora-a),.70) 38%,rgba(var(--aurora-b),.58) 58%,rgba(var(--aurora-c),.44) 77%,transparent 98%);
+      will-change:transform,opacity;transform-origin:center;animation:v18AuroraSweep 21s ease-in-out infinite alternate;transition:background .65s ease,opacity .65s ease;
     }
-    .aurora-ribbon:nth-child(1) { top:-9vh;transform:rotate(-8deg); }
-    .aurora-ribbon:nth-child(2) { top:31vh;opacity:.27;animation-duration:23s;animation-direction:alternate-reverse;transform:rotate(7deg) scaleY(.72); }
-    .aurora-ribbon:nth-child(3) { top:69vh;opacity:.22;animation-duration:29s;transform:rotate(-5deg) scaleY(.58); }
-    .aurora-ribbon::after {
-      content:"";
-      position:absolute;
-      inset:28% 7%;
-      border-radius:50%;
-      border-top:1px solid rgba(var(--comet-core),.42);
-      opacity:.65;
-    }
+    .aurora-ribbon:nth-child(1){top:-5vh;transform:rotate(-8deg);}
+    .aurora-ribbon:nth-child(2){top:42vh;opacity:.20;animation-duration:27s;animation-direction:alternate-reverse;transform:rotate(8deg) scaleY(.74);}
+    .aurora-ribbon:nth-child(3){display:none;}
+    .aurora-ribbon::after { content:"";position:absolute;inset:28% 7%;border-radius:50%;border-top:1px solid rgba(var(--comet-core),.34);opacity:.58; }
     .cosmic-dust {
-      opacity:.50;
-      background-image:
-        radial-gradient(circle at 7% 32%,rgba(var(--comet-core),.9) 0 1px,transparent 1.8px),
-        radial-gradient(circle at 82% 15%,rgba(var(--aurora-c),.75) 0 1.2px,transparent 2px),
-        radial-gradient(circle at 61% 77%,rgba(var(--comet-core),.8) 0 1px,transparent 1.7px),
-        radial-gradient(circle at 26% 88%,rgba(var(--aurora-b),.68) 0 1.1px,transparent 2px);
-      background-size:149px 149px,227px 227px,181px 181px,269px 269px;
-      will-change:transform,opacity;
-      animation:v18DustDrift 31s linear infinite;
-      transition:background-image .65s ease;
+      opacity:.38;
+      background-image:radial-gradient(circle at 7% 32%,rgba(var(--comet-core),.9) 0 1px,transparent 1.8px),radial-gradient(circle at 82% 15%,rgba(var(--aurora-c),.75) 0 1.2px,transparent 2px),radial-gradient(circle at 61% 77%,rgba(var(--comet-core),.8) 0 1px,transparent 1.7px);
+      background-size:149px 149px,227px 227px,181px 181px;will-change:transform,opacity;animation:v18DustDrift 35s linear infinite;transition:background-image .65s ease;
     }
     .comet {
-      position:absolute;
-      left:-34vw;
-      top:var(--comet-y,42vh);
-      width:clamp(150px,21vw,340px);
-      height:2px;
-      opacity:0;
-      border-radius:999px;
-      background:linear-gradient(90deg,transparent 0%,rgba(var(--comet-tail),.07) 18%,rgba(var(--comet-tail),.66) 78%,rgba(var(--comet-core),.98) 100%);
-      transform-origin:right center;
-      will-change:transform,opacity;
-      animation:v18CometFlight var(--comet-duration,15s) cubic-bezier(.36,.02,.72,.42) var(--comet-delay,0s) infinite;
-      transition:background .65s ease;
+      position:absolute;left:-52vw;top:var(--comet-y,42vh);width:46vw;height:1px;opacity:0;border-radius:999px;
+      background:linear-gradient(90deg,transparent 0%,rgba(var(--comet-tail),.07) 18%,rgba(var(--comet-tail),.64) 78%,rgba(var(--comet-core),.98) 100%);
+      transform-origin:right center;will-change:transform,opacity;animation:v18CometFlight var(--comet-duration,17s) cubic-bezier(.36,.02,.72,.42) var(--comet-delay,0s) infinite;transition:background .65s ease;
     }
-    .comet::after {
-      content:"";
-      position:absolute;
-      right:-3px;
-      top:50%;
-      width:7px;
-      aspect-ratio:1;
-      border-radius:50%;
-      transform:translateY(-50%);
-      background:rgba(var(--comet-core),1);
-      box-shadow:0 0 13px rgba(var(--comet-core),.95),0 0 28px rgba(var(--comet-tail),.68);
-    }
-    .comet:nth-child(1){--comet-y:18vh;--comet-duration:13s;--comet-delay:-4s;--comet-angle:-17deg;--comet-scale:.82;}
-    .comet:nth-child(2){--comet-y:47vh;--comet-duration:19s;--comet-delay:-13s;--comet-angle:-12deg;--comet-scale:1.05;}
-    .comet:nth-child(3){--comet-y:78vh;--comet-duration:23s;--comet-delay:-6s;--comet-angle:-22deg;--comet-scale:.68;}
-    .comet:nth-child(4){--comet-y:91vh;--comet-duration:29s;--comet-delay:-21s;--comet-angle:-15deg;--comet-scale:.58;}
-    .comet:nth-child(5){--comet-y:34vh;--comet-duration:17s;--comet-delay:-9s;--comet-angle:-24deg;--comet-scale:.52;}
-    .comet:nth-child(6){--comet-y:66vh;--comet-duration:26s;--comet-delay:-18s;--comet-angle:-10deg;--comet-scale:.74;}
-    body[data-evaluation-mode="strict"] .aurora-ribbon { opacity:.48; }
-    body[data-evaluation-mode="strict"] .cosmic-dust { opacity:.57; }
-    @keyframes v18AuroraSweep {
-      0% { transform:translate3d(-6vw,-2vh,0) rotate(-8deg) scaleX(.96) skewX(-6deg);opacity:.22; }
-      48% { opacity:.48; }
-      100% { transform:translate3d(8vw,5vh,0) rotate(5deg) scaleX(1.08) skewX(7deg);opacity:.40; }
-    }
-    @keyframes v18DustDrift {
-      from { transform:translate3d(-1.5%,1%,0);opacity:.38; }
-      50% { opacity:.62; }
-      to { transform:translate3d(1.6%,-1.2%,0);opacity:.42; }
-    }
-    @keyframes v18CometFlight {
-      0%,7% { transform:translate3d(-15vw,18vh,0) rotate(var(--comet-angle)) scaleX(var(--comet-scale));opacity:0; }
-      11% { opacity:.92; }
-      31% { opacity:.78; }
-      39%,100% { transform:translate3d(158vw,-47vh,0) rotate(var(--comet-angle)) scaleX(var(--comet-scale));opacity:0; }
-    }
-    /* ver.19: vivid PC nebula depth; transform/opacity-only motion keeps analysis responsive */
-    .nebula-field { position:absolute;inset:-18%;overflow:hidden; }
-    .nebula-field::after {
-      content:"";
-      position:absolute;
-      inset:14% 4%;
-      border-radius:50%;
-      opacity:.42;
-      background:conic-gradient(from 35deg at 50% 50%,transparent 0 11%,rgba(var(--aurora-a),.22) 18%,transparent 27% 46%,rgba(var(--aurora-b),.18) 55%,transparent 66% 80%,rgba(var(--aurora-c),.14) 88%,transparent 96%);
-      animation:v19SpiralTurn 34s linear infinite;
-      will-change:transform,opacity;
-    }
-    .nebula-orb {
-      position:absolute;
-      width:min(82vw,1180px);
-      aspect-ratio:1;
-      border-radius:50%;
-      opacity:.78;
-      background:radial-gradient(circle at 50% 50%,rgba(var(--comet-core),.15) 0 2%,rgba(var(--aurora-a),.34) 8%,rgba(var(--aurora-b),.22) 24%,rgba(var(--aurora-c),.10) 42%,transparent 68%);
-      will-change:transform,opacity;
-      animation:v19NebulaDrift 22s ease-in-out infinite alternate;
-      transition:background .65s ease,opacity .65s ease;
-    }
-    .nebula-orb:nth-child(1){left:-20vw;top:-30vh;}
-    .nebula-orb:nth-child(2){right:-25vw;bottom:-43vh;animation-duration:29s;animation-direction:alternate-reverse;opacity:.64;}
-    .nebula-orb:nth-child(3){left:24vw;top:24vh;width:min(58vw,820px);animation-duration:18s;opacity:.42;}
-    .aurora-ribbon:nth-child(4){top:13vh;opacity:.30;animation-duration:13s;animation-direction:alternate-reverse;transform:rotate(13deg) scaleY(.48);}
-    .aurora-ribbon:nth-child(5){top:54vh;opacity:.26;animation-duration:19s;transform:rotate(-13deg) scaleY(.42);}
-    @keyframes v19NebulaDrift {
-      0%{transform:translate3d(-7vw,-3vh,0) scale(.88) rotate(-12deg);opacity:.50;}
-      48%{opacity:.86;}
-      100%{transform:translate3d(9vw,7vh,0) scale(1.14) rotate(18deg);opacity:.68;}
-    }
-    @keyframes v19SpiralTurn {
-      0%{transform:rotate(0deg) scale(.92);opacity:.28;}
-      50%{opacity:.56;}
-      100%{transform:rotate(360deg) scale(1.06);opacity:.32;}
-    }
-    body[data-evaluation-mode="strict"] .nebula-orb { opacity:.90; }
-    body[data-evaluation-mode="strict"] .nebula-field::after { opacity:.62; }
-    body[data-evaluation-mode="strict"] :is(.primary-button,.primary-tab.active,.level-button.active,.choice.selected,.subject-settings-button) {
-      border-color:rgba(255,112,125,.80) !important;
-      background:linear-gradient(135deg,rgba(226,25,52,.96),rgba(105,4,24,.98)) !important;
-      box-shadow:0 0 0 1px rgba(255,88,106,.28),0 0 26px rgba(255,28,61,.24) !important;
-      color:#fff6f7 !important;
-    }
-    body[data-evaluation-mode="strict"] :is(.tool-kicker,.evaluation-kicker,.pink-emphasis,.review-case-evidence strong,.review-case-assessment strong) { color:#ff7e8d !important; }
+    .comet::after { content:"";position:absolute;right:-3px;top:50%;width:6px;aspect-ratio:1;border-radius:50%;transform:translateY(-50%);background:rgba(var(--comet-core),1);box-shadow:0 0 11px rgba(var(--comet-core),.9),0 0 23px rgba(var(--comet-tail),.62); }
+    .comet:nth-child(1){--comet-y:17vh;--comet-duration:15s;--comet-delay:-5s;--comet-angle:-19deg;--comet-scale:.86;}
+    .comet:nth-child(2){--comet-y:58vh;--comet-duration:22s;--comet-delay:-14s;--comet-angle:-13deg;--comet-scale:1;}
+    .comet:nth-child(3){--comet-y:86vh;--comet-duration:28s;--comet-delay:-9s;--comet-angle:-23deg;--comet-scale:.68;}
+    .comet:nth-child(4){display:none;}
+    body[data-evaluation-mode="strict"] .aurora-ribbon{opacity:.34;}
+    body[data-evaluation-mode="strict"] .cosmic-dust{opacity:.47;}
+    @keyframes v18AuroraSweep { 0%{transform:translate3d(-8vw,-2vh,0) rotate(-8deg) scaleX(.96) skewX(-6deg);opacity:.16;}48%{opacity:.34;}100%{transform:translate3d(10vw,4vh,0) rotate(5deg) scaleX(1.08) skewX(7deg);opacity:.29;} }
+    @keyframes v18DustDrift { from{transform:translate3d(-1.5%,1%,0);opacity:.30;}50%{opacity:.48;}to{transform:translate3d(1.6%,-1.2%,0);opacity:.34;} }
+    @keyframes v18CometFlight { 0%,7%{transform:translate3d(-20vw,16vh,0) rotate(var(--comet-angle)) scaleX(var(--comet-scale));opacity:0;}11%{opacity:.82;}31%{opacity:.68;}39%,100%{transform:translate3d(172vw,-43vh,0) rotate(var(--comet-angle)) scaleX(var(--comet-scale));opacity:0;} }
+    @media print{.cosmic-stage{display:none !important;}}
+    @media(prefers-reduced-motion:reduce){.aurora-ribbon,.cosmic-dust,.comet{animation:none !important;}.comet{display:none;}}
 
-    /* ver.19: Korean line integrity and no-frame-overflow guards */
-    :is(.review-case-card,.evaluation-item,.standard-detail-card,.flow-item,.profile-item,.usage-card,.panel,.card) { min-width:0; }
-    :is(.review-case-evidence,.review-case-assessment,.review-case-head h3,.evaluation-evidence,.evaluation-item p,.evaluation-item h3,.panel-note,.panel-title,.standard-detail-card p,.usage-card p,.usage-card li,td,th) {
+    /* mobile ver.12: preserve the current visual load while fixing Korean wrapping and overflow */
+    .mobile-build :is(.review-case-card,.evaluation-item,.standard-detail-card,.flow-item,.profile-item,.usage-card,.panel,.card) { min-width:0; }
+    .mobile-build :is(.review-case-evidence,.review-case-assessment,.review-case-head h3,.evaluation-evidence,.evaluation-item p,.evaluation-item h3,.panel-note,.panel-title,.standard-detail-card p,.usage-card p,.usage-card li,td,th) {
       word-break:keep-all;
       overflow-wrap:break-word;
       text-wrap:pretty;
     }
-    :is(.review-case-head,.evaluation-item-head,.panel-head,.standard-detail-head) > :first-child { min-width:0;word-break:keep-all;overflow-wrap:break-word; }
-    :is(.review-case-grade,.evaluation-grade,.rating-pill,.standard-detail-grade,.flow-grade,.profile-grade) {
+    .mobile-build :is(.review-case-head,.evaluation-item-head,.panel-head,.standard-detail-head) > :first-child { min-width:0;word-break:keep-all;overflow-wrap:break-word; }
+    .mobile-build :is(.review-case-grade,.evaluation-grade,.rating-pill,.standard-detail-grade,.flow-grade,.profile-grade) {
       flex:0 0 auto;
       width:auto;
       max-width:100%;
       white-space:nowrap;
     }
-    :is(.action-row,.result-tools,.dialog-actions,.button-group,.segmented) { flex-wrap:wrap;min-width:0; }
-    :is(button,.primary-button,.ghost-button,.choice,.level-button,.subject-settings-button) { min-width:0;max-width:100%; }
-    .evaluation-item.is-excluded { opacity:.84;border-style:dashed; }
-    .evaluation-item.is-excluded .evaluation-grade { color:#f3d8e4;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18); }
-    .area-card-rubric th:first-child,.area-card-rubric td:first-child { min-width:150px; }
-    @media(max-width:760px) {
-      .aurora-ribbon { filter:blur(18px);opacity:.25;height:24vh; }
-      .aurora-ribbon:nth-child(3),.aurora-ribbon:nth-child(4),.aurora-ribbon:nth-child(5),.comet:nth-child(4),.comet:nth-child(5),.comet:nth-child(6),.nebula-orb:nth-child(3) { display:none; }
-      .comet { width:46vw;height:1px; }
-      .cosmic-dust { opacity:.38; }
-    }
-    @media print {
-      .cosmic-stage { display:none !important; }
-    }
-    @media(prefers-reduced-motion:reduce) {
-      .aurora-ribbon,.cosmic-dust,.comet,.nebula-orb,.nebula-field::after { animation:none !important; }
-      .comet { display:none; }
-    }
+    .mobile-build :is(.action-row,.result-tools,.dialog-actions,.button-group,.segmented) { min-width:0; }
+    .mobile-build :is(button,.primary-button,.ghost-button,.choice,.level-button,.subject-settings-button) { min-width:0;max-width:100%; }
+    .mobile-build .evaluation-item.is-excluded { opacity:.84;border-style:dashed; }
+    .mobile-build .evaluation-item.is-excluded .evaluation-grade { color:#f3d8e4;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18); }
+    .mobile-build .area-card-rubric th:first-child,.mobile-build .area-card-rubric td:first-child { min-width:0; }
 
   </style>
 
@@ -3530,25 +3350,23 @@
     }
   </style>
 </head>
-<body>
-  <div class="galaxy-field" aria-hidden="true"></div>
+<body class="mobile-build">
   <div class="cosmic-stage" aria-hidden="true">
-    <div class="nebula-field"><span class="nebula-orb"></span><span class="nebula-orb"></span><span class="nebula-orb"></span></div>
-    <div class="aurora-field"><span class="aurora-ribbon"></span><span class="aurora-ribbon"></span><span class="aurora-ribbon"></span><span class="aurora-ribbon"></span><span class="aurora-ribbon"></span></div>
+    <div class="aurora-field"><span class="aurora-ribbon"></span><span class="aurora-ribbon"></span><span class="aurora-ribbon"></span></div>
     <div class="cosmic-dust"></div>
-    <div class="comet-field"><span class="comet"></span><span class="comet"></span><span class="comet"></span><span class="comet"></span><span class="comet"></span><span class="comet"></span></div>
+    <div class="comet-field"><span class="comet"></span><span class="comet"></span><span class="comet"></span><span class="comet"></span></div>
   </div>
   <main class="app-shell">
     <header class="topbar">
       <div class="brand">
         <img class="logo" src="data:image/webp;base64,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" alt="라이언 캐릭터">
         <div><h1>라이언의 기록 분석</h1></div>
-        <span class="version">ver.23</span>
+        <span class="version">모바일 ver.16</span>
       </div>
 
       <div class="topbar-actions">
         <a class="back-home-button" href="https://seiryu1318.github.io/Ergosphere_Ryan/" aria-label="Ergosphere Ryan 메인 페이지로 돌아가기" title="Ergosphere Ryan 메인 페이지로 돌아가기">돌아가기</a>
-        <a class="version-switch-button" href="https://seiryu1318.github.io/Ryan_record/mobile/" aria-label="모바일 버전 열기" title="모바일 버전 열기">모바일 버전</a>
+        <a class="version-switch-button" href="https://seiryu1318.github.io/Ryan_record/" aria-label="PC 버전 열기" title="PC 버전 열기">PC 버전</a>
       </div>
     </header>
 
@@ -3880,7 +3698,7 @@
 
     <section class="card usage-panel tab-panel" id="guidePanel" role="tabpanel" aria-labelledby="guideTab">
       <header class="usage-header">
-        <span class="tool-kicker">ver.23 · 문구부터 시작하는 대결·가상 리테이크 안내</span>
+        <span class="tool-kicker">모바일 ver.16 · 문구부터 시작하는 대결·가상 리테이크 안내</span>
         <h2>사용방법</h2>
         <p><strong>엄격·평범</strong>은 평가영역을 먼저 선택해 기존 카드 평가를 진행합니다. <strong class="pink-emphasis">라이언과의 대결</strong>은 평가영역을 숨기고 텍스트 입력부터 시작하며, 기록 유형을 추정해 네 지표와 계열별 익명 우수사례 패턴을 비교합니다. 결과 아래의 <strong class="pink-emphasis">가상 리테이크</strong>는 원문 수정본이 아니라 사실 확인 슬롯과 원문 위치를 보여 주는 구조 연습입니다.</p>
       </header>
@@ -3971,7 +3789,7 @@
             <div><strong>진로역량</strong><span><strong class="pink-emphasis">진로 탐색 활동과 경험</strong>의 동기·수행·배움·변화를 평가합니다.</span></div>
             <div><strong>공동체역량</strong><span><strong class="pink-emphasis">협업·소통, 나눔·배려, 성실·규칙준수, 리더십</strong>을 평가합니다.</span></div>
           </div>
-          <p style="margin-top:10px"><strong class="pink-emphasis">학업성취도, 전공(계열) 관련 교과 이수 노력, 전공(계열) 관련 교과 성취도</strong>는 이 입력창에서 확인할 수 없으므로 점수·분모·감점에서 완전히 제외합니다. 서울대학교 자료는 별도 점수를 더하는 표가 아니라, 한 수식어나 단일 항목을 과대 일반화하지 않고 여러 장면의 <strong>질·축적·맥락 연결</strong>을 다시 확인하는 렌즈로 사용합니다. 엄격은 A·B·C, 평범은 A·B→우수·C→미흡으로 표시하며 <strong>평가 제외</strong>는 그대로 유지합니다.</p>
+          <p style="margin-top:10px"><strong class="pink-emphasis">학업성취도, 전공(계열) 관련 교과 이수 노력, 전공(계열) 관련 교과 성취도</strong>는 이 입력창에서 확인할 수 없으므로 점수·분모·감점에서 완전히 제외합니다. 서울대학교 자료는 별도 점수를 더하는 표가 아니라 여러 장면의 <strong>질·축적·맥락 연결</strong>을 다시 확인하는 렌즈입니다. 엄격은 A·B·C, 평범은 A·B→우수·C→미흡으로 표시하며 <strong>평가 제외</strong>는 그대로 유지합니다.</p>
         </article>
         <article class="usage-card usage-card-wide">
           <h3>8. 계기–확장 핵심 맥락</h3>
@@ -4013,7 +3831,7 @@
   (() => {
     "use strict";
 
-    const APP_VERSION = "ver.23";
+    const APP_VERSION = "모바일 ver.16";
 
     const AREA = {
       overall: {
@@ -8995,7 +8813,6 @@
     };
 
     /* ======================= end ver.15 semantic calibration ======================= */
-
     /* ================= ver.16 indexed evidence engine ================= */
     const V16_SCAN_CACHE = {
       source: null,
@@ -9240,7 +9057,7 @@
     };
     /* =============== end ver.16 indexed evidence engine =============== */
 
-    /* ============ ver.17 context-first major-unit evidence engine ============ */
++    /* ============ ver.17 context-first major-unit evidence engine ============ */
     appendUniqueTermsV13(V15_TERMS.question, ["어떤 영향", "어떤 관계", "어떤 역할", "어떻게", "상호작용이", "궁금증"]);
     appendUniqueTermsV13(V15_TERMS.source, ["기사 내용", "추가 조사", "추가조사", "전공 안내", "학과 안내", "가이드북"]);
     appendUniqueTermsV13(V15_TERMS.reasoning, ["메커니즘", "기전", "신호 전달", "신호전달", "발현", "유전체", "대사체", "상호작용", "조절", "억제", "생존 전략", "발병 기전"]);

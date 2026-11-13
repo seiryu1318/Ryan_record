@@ -1,7 +1,7 @@
 /* Ryan Record: evidence-based review. Runs locally in the browser; no I/O. */
 (function (root) {
   "use strict";
-  const VERSION = "v32-record-evidence@1";
+  const VERSION = "v33-record-evidence@1";
   const AREAS = {
     overall: { label:"전반 분석", start:"어떤 수업·관찰에서 어떤 질문이나 문제가 생겼는지", method:"학생이 선택한 기준·자료·방법", depth:"결과를 통해 무엇을 판단했고 그 근거가 무엇인지" },
     autonomy: { label:"자율활동", start:"학급이나 학교에서 어떤 필요를 발견했는지", method:"학생이 맡은 역할과 직접 제안하거나 조정한 방법", depth:"학생의 조치 뒤 학급 운영이나 구성원 참여가 어떻게 달라졌는지" },
@@ -370,12 +370,21 @@
   const COMPLETED_VERB = "분석|비교|측정|관찰|조사|수집|분류|검토|검증|실험|제작|작성|발표|공유|기록|정리|설계|적용|계산|확인|설명|파악|도출|발견|조정|제안|안내|수정|보완";
   const SEQUENCE_EDIT = new RegExp("(?:^|\\s)("+COMPLETED_VERB+")(하였으며|했으며|하였고|했고|하였으나|했으나|하였지만|했지만|하며|하고|하지만|하였음|했음|함)[ \\t]*,?[ \\t]+(?=(?:그\\s*결과|이를\\s*(?:바탕으로|통해|토대로)|이후|이어서|이에|따라서|그러나|다만|반면|(?:학생|교사|팀원|모둠|친구|상대)(?:은|는|이|가))\\s)","g");
   const CONTRAST_EDIT = new RegExp("(?:^|\\s)("+COMPLETED_VERB+")(?:하였으나|했으나|하였지만|했지만|하지만),[ \\t]+(?=[가-힣])","g");
-  const MERGE_EDIT = /(?:^|\s)((?:[\p{L}\p{N}·-]{1,24}\s+){0,2}(?:비교표|기록표|분류표|발표\s*자료|결과표|보고서|발표문|설문지|안내문|요약표|포스터|표|그래프|모형))를 (작성|제작|정리)함[.。][ \t]+\2한 ([^.\r\n!?。！？]{1,48}?)를[ \t]+(?=[^.\r\n!?。！？]{0,45}(?:발표|제출|공유|게시|설명|배포)(?:함|하였음|했음)(?=[.。!?！？\s]|$))/gu;
+  const MERGE_EDIT = /(?:^|\s)((?:[\p{L}\p{N}·-]{1,24}\s+){0,2}(?:비교표|기록표|분류표|발표\s*자료|결과표|보고서|발표문|설문지|안내문|요약표|포스터|표|그래프|모형))(?:를|로) (작성|제작|정리)함[.。][ \t]+\2한 ([^.\r\n!?。！？]{1,48}?)(?:을|를)[ \t]+(?=[^.\r\n!?。！？]{0,45}(?:발표|제출|공유|게시|설명|배포)(?:함|하였음|했음)(?=[.。!?！？\s]|$))/gu;
   const LABELED_ORDER_EDIT = /^(?:확인한\s*결과|관찰\s*결과|결과)[：:][ \t]+([^\r\n]+)(\r?\n)(?:수행\s*방법|탐구\s*방법|조사\s*방법|방법)[：:][ \t]+([^\r\n]+)/gm;
   const NO_SPLIT_CONTEXT = /(?:않|못|아니|않을|해야|하려|예정|계획|수\s*있|수\s*없|가능|우려|필요|추정|가정|가설|혹은|또는|없이)/;
   const REPORTING_SUFFIX = /(?:다고|라고|다는|라는|하도록).{0,28}(?:설명|진술|기록|언급|주장|보도|작성|가정|제안|발표|답변)(?:함|했|하였|됨|하였음|한|하는)|(?:다고|라는|다는).{0,25}(?:내용|자료|보도|기사).{0,18}(?:읽|듣|옮기|인용|요약)/;
   const OUTSIDE_WRITER = /(?:^|\s)(?:동료|부모|형제|선배|후배|연구자|사서|진행자|멘토|대표|담당자|친구들|조원들|팀원들)(?:은|는|이|가)\s/;
   const GENERIC_LINK = /^(?:학생|본인|활동|방법|과정|결과|수치|기준|자료|정리|설명|사례|의견|관찰|수행|확인|시간|조건|비교|측정|나타나|늘어난|줄어든|도출|검토)$/;
+  const GENERIC_PRAISE_SENTENCE = /^(?:(?:이|해당)\s*활동에서\s+|(?:평소|항상|매사에|전반적으로|모든\s*활동에서)\s+)?(?:(?:(?:학습|탐구|문제\s*해결|분석|사고|표현)\s*(?:역량|능력|태도)|(?:자기\s*주도성|열정|성실성))(?:이|가)\s*(?:매우\s*)?(?:우수함|뛰어남|돋보임|탁월함|인상적임)|(?:(?:활동|수업|과제)(?:에|에서)\s+)?(?:(?:매우|항상)\s+)?(?:적극적으로|성실하게|열심히)\s*(?:참여함|임함))\s*[.。]?$/;
+  const EDIT_BOUNDARY = /\r?\n|[!?！？]|^(?:그리고|또한|이에|따라서|이후|그\s*결과|이를|앞서|이러한|그러한|같은\s*방식으로|해당\s*결과|그\s*활동)/;
+  const EDIT_RESULT = /(?:확인함|발견함|나타남|정리함|완성함|관찰함|도출함|밝힘|설명함|기각됨|참여함|개선됨|해결함|기록함)[.。]?$/;
+  const FACT_LINK_VERB = new Map([["비교함","비교한 결과, "],["대조함","대조한 결과, "],["분석함","분석한 결과, "],["검토함","검토한 결과, "]]);
+  const DIRECT_COMPARE = /^(측정값|관찰값|실험값|응답값|응답\s*결과|측정\s*결과)(?:을|를)\s*(비교함|대조함|분석함|검토함)[.。]$/;
+  const CHANGE_DESCRIPTION = /(?:높아|높았|높음을|낮아|낮았|낮음을|감소|증가|줄어|줄었|늘어|늘었|더\s*(?:크|작|많|적)|같음을|차이|다르|달라|경향|비율)/;
+  const EXACT_NULL_RESULT = /(?:차이(?:가|는)?|상관(?:관계)?(?:가|는)?)\s*(?:확인되지\s*않음|나타나지\s*않음)[.。]?$/;
+  const DIRECT_MEASUREMENT = /(?:측정함|관찰함|기록함|집계함|조사함|수집함)[.。]$/;
+  const REWRITE_RISK = /(?:그대로\s*옮|인용|발췌|요약|안내받|소개된|전해|들었|라고|다는|라고\s*함|가정|추정|가능|예정|계획|가설|만약|때문에|원인임|원인이라고|(?:확인|관찰|측정|비교|분석)하지\s*(?:않|못)|미실시|보류|없다고|나타나지\s*않|확인되지\s*않)/;
   function sharedSubject(a,b) {
     const content = value => new Set(contentTokens(value)
       .map(word => word.replace(/(?:에서|으로|에게|부터|까지|에는|에도|[의이가은는을를에로와과도만])$/u,""))
@@ -384,15 +393,84 @@
     return [...content(a)].filter(word => second.has(word)).length >= 2;
   }
 
-  function rewrite(original) {
+  function editorialFocus(original, options, add, quoted) {
+    const scene = options.scene;
+    const sections = spans(original,SENTENCE_BREAK,0,true,scanQuotes(original).allMasked);
+    const sameLine = (a,b) => a && b && /^[ \t]+$/.test(original.slice(a.end,b.start));
+    const protectedUnit = (unit,{allowPeer = false,allowNull = false} = {}) => !unit || /[\r\n]/.test(unit.span) || quoted(unit.start,unit.end)
+      || BOUNDARY.test(unit.span) || SOURCE_ACTOR.test(unit.span) || !allowPeer && OTHER_ACTOR.test(unit.span)
+      || OUTSIDE_WRITER.test(unit.span) || REPORTING_SUFFIX.test(unit.span)
+      || REWRITE_RISK.test(allowNull ? unit.span.replace(EXACT_NULL_RESULT,"") : unit.span)
+      || PLAN.test(unit.span) || !allowNull && NEG.test(unit.span) || PASTE_BREAK.test(unit.span);
+    const focus = (unit,kind) => unit && {span:unit.span,kind};
+    let editorial = null;
+    for (let i = 1; i < sections.length-1; i++) {
+      const measured = sections[i-1], comparison = sections[i], finding = sections[i+1];
+      const match = DIRECT_COMPARE.exec(comparison.span);
+      const nullResult = EXACT_NULL_RESULT.test(finding.span);
+      if (!match || !sameLine(measured,comparison) || !sameLine(comparison,finding)
+        || protectedUnit(measured) || protectedUnit(comparison) || protectedUnit(finding,{allowNull:nullResult})
+        || [comparison,finding].some(unit => EXPLICIT_STUDENT.test(unit.span))
+        || !DIRECT_MEASUREMENT.test(measured.span) || !nullResult && !EDIT_RESULT.test(finding.span)
+        || EDIT_BOUNDARY.test(finding.span) || !CHANGE_DESCRIPTION.test(finding.span)) continue;
+      // Combine only an explicit comparison of measurements with the immediately following observation.
+      const recorded = options.frames.some(frame => frame.index === i-1 && frame.method && frame.actor === "student");
+      const observed = options.frames.some(frame => frame.index === i+1 && frame.actor === "student"
+        && (frame.ownResult || nullResult && !frame.plan && !frame.borrowed));
+      if (!recorded || !observed || !sharedSubject(measured.span,finding.span)) continue;
+      const conjunction = comparison.span.slice(0,comparison.span.indexOf(match[2]))+FACT_LINK_VERB.get(match[2]);
+      if (add(comparison.start,finding.start,conjunction,
+        "이미 비교하거나 분석한 값에서 나온 관찰을 바로 이어, 무엇을 근거로 확인했는지 드러냈습니다.","내용 연결")) {
+        editorial ||= focus(finding,"비교에서 확인한 결과");
+      }
+    }
+
+    if (!scene?.action || scene.action.actor !== "student") return editorial;
+    const action = sections[scene.action.index];
+    const neighborhood = options.groups.find(group => group.includes(scene.action)) || [];
+    const outcome = frame => frame && (frame.ownResult || scene.community && frame.peerOutcome)
+      && EDIT_RESULT.test(sections[frame.index]?.span || "") && !frame.plan && !frame.neg && !frame.borrowed;
+    const separateFinding = neighborhood.find(frame => frame.index > scene.action.index && frame.index <= scene.action.index+2
+      && outcome(frame) && sameLine(sections[frame.index-1],sections[frame.index])
+      && (CHANGE_DESCRIPTION.test(frame.text) || frame.validNull || frame.artifact || scene.community && frame.peerOutcome));
+    const endpoint = separateFinding || scene.end;
+    if (!outcome(endpoint)) return editorial;
+    const finding = sections[endpoint.index];
+    if (protectedUnit(action) || protectedUnit(finding,{allowPeer:Boolean(scene.community && endpoint.peerOutcome)}) || !action || !finding
+      || /\n[ \t]*\n/.test(original.slice(action.start,finding.end)) || action.start > finding.start) return editorial;
+    if (!scene.action.specificity || scene.action.tokens < 2) return editorial;
+    // Strip only self-contained boilerplate next to a documented scene; retain independent actions and qualifiers.
+    const isFiller = unit => !protectedUnit(unit) && GENERIC_PRAISE_SENTENCE.test(unit.span);
+    const first = scene.action.index, last = endpoint.index;
+    let from = first;
+    while (from > 0 && first-from < 3 && isFiller(sections[from-1]) && sameLine(sections[from-1],sections[from])) from--;
+    if (from < first && !EDIT_BOUNDARY.test(action.span) && !/^(?:이|그|해당|이런|그런)\s/.test(action.span)) {
+      const begin = sections[from].start;
+      if (add(begin,action.start,"","구체적인 행동과 결과가 이어져 있어, 서두의 포괄적인 평가 대신 실제 수행으로 시작하게 했습니다.","내용 초점")) {
+        editorial ||= focus(action,"기록의 첫머리에 남긴 행동");
+      }
+    }
+    let to = last;
+    while (to+1 < sections.length && to-last < 3 && isFiller(sections[to+1]) && sameLine(sections[to],sections[to+1])) to++;
+    if (to > last && (to === sections.length-1 || /\r?\n[ \t]*\r?\n/.test(original.slice(sections[to].end,sections[to+1].start)))) {
+      if (add(finding.end,sections[to].end,"","같은 문단의 행동과 결과가 근거가 되므로, 새로운 사실을 담지 않은 평가 표현을 덜었습니다.","내용 초점")) {
+        editorial ||= focus(finding,"남겨 둔 구체적인 결과");
+      }
+    }
+    return editorial;
+  }
+
+  function rewrite(original, options) {
     const edits = [];
     const patches = [];
     const safeQuotes = [...original.matchAll(QUOTE)].map(match => [match.index,match.index+match[0].length]);
+    const quoted = (at,end) => safeQuotes.some(([start,stop]) => at < stop && end > start);
     const add = (at,end,after,reason,type) => {
-      if (safeQuotes.some(([start,stop]) => at < stop && end > start)
-        || patches.some(item => at < item.stop && end > item.at)) return;
+      if (quoted(at,end) || patches.some(item => at < item.stop && end > item.at)) return false;
       patches.push({at,stop:end,after,reason,type});
+      return true;
     };
+    const focus = editorialFocus(original,options,add,quoted);
     for (const match of original.matchAll(LABELED_ORDER_EDIT)) {
       const [,finding,line,method] = match;
       if (!ACTION.test(method) || !DONE.test(method) || PLAN.test(method) || NEG.test(method) || !RESULT.test(finding)
@@ -461,18 +539,19 @@
       plain += original.slice(from,patch.at);
       const start = plain.length;
       plain += patch.after;
-      const end = plain.trimEnd().length;
-      edits.push({before:original.slice(patch.at,patch.stop).trimEnd(),after:plain.slice(start,end),start,end,reason:patch.reason,type:patch.type});
+      const end = start+patch.after.trimEnd().length;
+      edits.push({before:original.slice(patch.at,patch.stop).trim(),after:plain.slice(start,end),start,end,reason:patch.reason,type:patch.type});
       from = patch.stop;
     }
     plain += original.slice(from);
-    return {plain,edits};
+    return {plain,edits,focus};
   }
 
   function highlightedRevision(revision) {
     let at = 0;
     let html = "";
     for (const {start,end} of revision.edits) {
+      if (start === end) continue;
       html += escape(revision.plain.slice(at,start))
         + '<mark class="review-edit-highlight">'+escape(revision.plain.slice(start,end))+'</mark>';
       at = end;
@@ -615,7 +694,7 @@
         course:"선택 교과의 개념과 수행 방법의 연결이 부족합니다.",role:"팀 성과와 학생 개인의 기여가 구분되지 않습니다."
       })[item.key]) : ["이 문구에서 우선 보완할 근거는 확인되지 않았습니다."],
       suggestions:guidance.length ? guidance.map(item => item.what) : ["수치와 자료 출처를 다시 확인한 뒤, 현재 문장의 행동과 결과 연결을 유지하세요."],
-      guidance,revision:rewrite(text),flags:{completedEpisode:Boolean(end),supportedDepth:Boolean(areaDepth),courseLink,plannedOnly:Boolean(plan&&!end),sourceOnly:Boolean(source&&!end),negatedOnly:Boolean(neg&&!end),communityRoute:Boolean(best?.community),sceneCount:groups.length,quotedActionExcluded:quotes.masked,borrowedActionSeparated:hasBorrowedAction}};
+      guidance,revision:rewrite(text,{scene:best,frames,groups}),flags:{completedEpisode:Boolean(end),supportedDepth:Boolean(areaDepth),courseLink,plannedOnly:Boolean(plan&&!end),sourceOnly:Boolean(source&&!end),negatedOnly:Boolean(neg&&!end),communityRoute:Boolean(best?.community),sceneCount:groups.length,quotedActionExcluded:quotes.masked,borrowedActionSeparated:hasBorrowedAction}};
   }
 
   function renderRevision(canonical, doc) {
@@ -627,9 +706,10 @@
     const guide = byId("retakePlacementGuide");
     const source = byId("retakeSourceAnchors");
     if (body) body.innerHTML = '<h3>원문을 바탕으로 고친 문장</h3><p class="review-rewrite-text">'+highlightedRevision(revision)+'</p>'
+      + (revision.focus ? '<p class="review-content-focus"><strong>'+escape(revision.focus.kind)+'</strong> '+keyHighlight(revision.focus.span)+'</p>' : '')
       + (revision.edits.length ? '<ul class="review-change-list">'+revision.edits.map(edit =>
-        '<li><strong>'+escape(edit.type)+'</strong><span class="review-change-pair"><span><b>수정 전</b> “'+escape(edit.before)
-        +'”</span><span><b>수정 후</b> “'+escape(edit.after)+'”</span></span><span>'+escape(edit.reason)+'</span></li>').join("")+'</ul>' : '');
+        '<li data-edit-type="'+escape(edit.type)+'"><strong>'+escape(edit.type)+'</strong><span class="review-change-pair"><span><b>수정 전</b> “'+escape(edit.before)
+        +'”</span><span>'+(edit.after ? '<b>수정 후</b> “'+escape(edit.after)+'”' : '<b>수정안에서 제외</b>')+'</span></span><span>'+escape(edit.reason)+'</span></li>').join("")+'</ul>' : '');
     const sample = byId("reviewCompletionExample");
     if (sample) {
       const candidate = guidance.find(item => item.anchor && ["result","depth","role","course"].includes(item.key));
@@ -647,7 +727,7 @@
     const warning = byId("retakeWarningText");
     if (warning) warning.textContent = "대괄호가 있는 문장은 작성 틀입니다. 확인할 사실을 채우기 전에는 기록에 넣지 마세요.";
     const status = byId("retakeStatus");
-    if (status) status.textContent = revision.edits.length ? "형광펜으로 표시한 "+revision.edits.length+"곳을 다듬었습니다." : "자동으로 바꾼 표현은 없습니다.";
+    if (status) status.textContent = revision.edits.length ? "고친 부분은 형광펜으로, 덜어낸 문구는 수정 전후 목록에 표시했습니다." : "자동으로 바꾼 표현은 없습니다.";
     panel.dataset.ready = "true";
   }
 

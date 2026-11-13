@@ -54,7 +54,7 @@ if (server) await new Promise((resolveListen, rejectListen) => {
 const baseUrl = new URL(live ? "https://seiryu1318.github.io/Ryan_record/" : "http://127.0.0.1:" + server.address().port + "/");
 const siteUrl = route => new URL(route.replace(/^\//, ""), baseUrl);
 const allowedRequests = new Set([...staticFiles.keys(), "/favicon.ico",
-  "/record-review.css?v=32", "/record-review.js?v=32"].map(route => siteUrl(route).href));
+  "/record-review.css?v=33", "/record-review.js?v=33"].map(route => siteUrl(route).href));
 
 const inquiry = "수온에 따라 효모 발효 속도가 달라지는 이유를 질문함. 교과서의 효소 단원을 참고해 온도만 다르게 설정하고 같은 양의 효모에서 발생한 기체 부피를 세 차례 측정함. 측정값을 표로 비교하여 수온이 높은 조건에서 기체 부피가 더 큰 이유를 효소 활성과 연결해 해석함. 첫 측정에서 온도계 위치가 달라 오차가 생긴 한계를 확인하고 센서 위치를 통일해 재측정하여 편차가 줄어든 결과를 표에 표시함.";
 const action = "교내 기후 활동에서 자료 정리 역할을 맡아 기상 관측 자료 두 종류를 날짜별로 정리하고 표로 작성함. 완성한 표를 모둠 발표 자료로 제출함.";
@@ -83,6 +83,36 @@ const sequenceInput = "용액의 pH 7.4 조건에서 E. coli 집락을 3회 측�
 const sequenceExpected = sequenceInput.replace("측정하였으며,", "측정함.");
 const unrelatedRewrite = "결과: 국어 발표에 참여함.\n방법: 미세먼지 농도를 3회 측정함.";
 const borrowedRewrite = "결과: 저자가 실험에서 차이가 나타난 것을 설명함.\n방법: 학생은 논문을 읽고 자료를 분류함.";
+
+const editorialMethod = "효모가 만든 기체 부피를 20℃와 30℃ 조건에서 3회씩 비교함.";
+const editorialResult = "30℃ 조건에서 기체 부피가 24mL로 더 크게 나타난 것을 확인함.";
+const editorialPraise = "탐구 역량이 우수함.";
+const editorialFocusInput = [editorialPraise, editorialPraise, "매사에 성실하게 참여함.", editorialMethod, editorialResult].join(" ");
+const editorialMeasurement = "온도를 20℃와 30℃로 나누어 효모 발효 속도를 3회씩 측정함.";
+const editorialMeasuredInput = editorialFocusInput.replace(editorialMethod, editorialMeasurement);
+const editorialClosingInput = [editorialMethod, editorialResult, editorialPraise, editorialPraise].join(" ");
+const protectedEditorialFacts = [
+  "학생은 온도를 20℃와 30℃로 나누어 효모 발효 속도를 3회씩 측정함.",
+  "교사는 측정 과정에서 안전 수칙을 지킨 점을 높이 평가함.",
+  "보고서의 ‘온도가 높을수록 발효가 빨라짐’을 인용함.",
+  "학생이 직접 기록한 표에서는 조건별 차이를 확인하지 못함.",
+  "학급 회의가 끝난 뒤 학생이 직접 장비 목록을 확인하여 기기 2개를 반납함.",
+];
+const protectedEditorialInput = protectedEditorialFacts.join(" ");
+const unsupportedEditorialInput = "탐구 역량이 우수함. 매사에 성실하게 참여함. 다음 수업에서 온도별 기체 부피를 3회씩 측정할 계획임.";
+const separateParagraphsEditorial = "매사에 성실하게 참여함.\n\n" + editorialMethod + " " + editorialResult;
+const linkedEditorialPrefix = "효모 집락 지름을 20℃와 30℃ 조건에서 각각 3회 측정함. ";
+const linkedEditorialResult = "30℃ 조건에서 효모 집락 지름이 24mm로 더 크게 나타난 것을 확인함.";
+const linkedEditorialInput = linkedEditorialPrefix + "측정값을 비교함. " + linkedEditorialResult;
+const linkedEditorialExpected = linkedEditorialPrefix + "측정값을 비교한 결과, " + linkedEditorialResult;
+const attributedComparisonInput = linkedEditorialPrefix + "측정값을 비교함. 교사는 " + linkedEditorialResult;
+const unrelatedComparisonInput = linkedEditorialPrefix + "측정값을 비교함. 30℃ 조건에서 교실의 이산화탄소 농도가 24ppm 더 높아진 것을 확인함.";
+const nullEditorialPrefix = "효모 발효 속도를 20℃와 30℃ 조건에서 각각 3회 측정함. ";
+const nullEditorialResult = "효모 발효 속도에 차이가 확인되지 않음.";
+const nullEditorialInput = nullEditorialPrefix + "측정값을 비교함. " + nullEditorialResult;
+const nullEditorialExpected = nullEditorialPrefix + "측정값을 비교한 결과, " + nullEditorialResult;
+const plannedNullEditorial = nullEditorialPrefix + "측정값을 비교할 계획임. " + nullEditorialResult;
+const sourceNullEditorial = nullEditorialPrefix + "측정값을 비교함. 보고서에서 " + nullEditorialResult;
 
 const scannerFixtures = {
   quoted: "수업 자료에 실린 ‘하천의 오염 수치를 3회 측정해 감소 원인을 분석하고 보고서를 완성함.’이라는 문장을 읽고 소감을 적음.",
@@ -455,6 +485,76 @@ async function assertStructuralRewrite(page, example) {
   }
 }
 
+function assertEditorialDraft(revision) {
+  assert.equal(revision, editorialMethod + " " + editorialResult,
+    "remove generic praise and keep the completed method, actual observation, numbers, and units intact");
+}
+
+async function assertEditorialFocus(page, example) {
+  const preview = page.locator("#retakeExampleText .review-rewrite-text");
+  const notes = page.locator(".review-change-list li");
+  const reveal = async () => {
+    if (await example.getAttribute("open") === null) await example.locator("summary").click();
+    assert.equal(await preview.isVisible(), true);
+  };
+
+  const editorial = await analyze(page, editorialFocusInput);
+  await reveal();
+  assertEditorialDraft(editorial.revision);
+  assert.equal(await preview.locator("mark.review-edit-highlight").count(), 0, "deletions create no empty marks in rewritten text");
+  const removals = notes.and(page.locator('[data-edit-type="내용 초점"]'));
+  const removalNotes = await removals.allTextContents();
+  assert.ok(removalNotes.some(note => note.includes(editorialPraise)), "the removed praise remains reviewable");
+  assert.ok(removalNotes.some(note => note.includes("매사에 성실하게 참여함.")), "the removed generic participation remains reviewable");
+  assert.ok(removalNotes.every(note => note.includes("수정안에서 제외")), "the edit list labels removed wording without a fake replacement");
+  const focus = page.locator(".review-content-focus mark.review-key-highlight");
+  const focused = await focus.allTextContents();
+  assert.ok(focused.some(text => /20℃|24mL|효모/.test(text) && editorialFocusInput.includes(text)), "the content focus quotes exact concrete evidence");
+  await assertReadableContrast(page, [".review-content-focus mark.review-key-highlight"], "editorial focus");
+  await openReviewSection(page, "analysis");
+  assert.equal(await page.locator("#recordText").inputValue(), editorialFocusInput, "applying an editorial suggestion never overwrites source text");
+
+  const protectedResult = await analyze(page, protectedEditorialInput);
+  await reveal();
+  for (const fact of protectedEditorialFacts) {
+    assert.ok(protectedResult.revision.includes(fact), "unique fact, original actor, direct quote, or negative observation was lost: " + fact);
+  }
+  assert.ok(protectedResult.revision.indexOf(protectedEditorialFacts[1]) < protectedResult.revision.indexOf(protectedEditorialFacts[2]),
+    "the edit does not conflate the teacher's observation with the cited source");
+  assert.equal(await preview.textContent(), protectedResult.revision, "highlight styling must not change rewritten text");
+
+  for (const [input, expected] of [
+    [editorialMeasuredInput, editorialMeasurement + " " + editorialResult],
+    [editorialClosingInput, editorialMethod + " " + editorialResult],
+  ]) {
+    const result = await analyze(page, input);
+    await reveal();
+    assert.equal(result.revision, expected, "documented action and observation support removing generic opening or closing remarks");
+    assert.equal(await preview.locator("mark.review-edit-highlight").count(), 0);
+  }
+
+  for (const [input, expected, prefix, finding] of [
+    [linkedEditorialInput, linkedEditorialExpected, linkedEditorialPrefix, linkedEditorialResult],
+    [nullEditorialInput, nullEditorialExpected, nullEditorialPrefix, nullEditorialResult],
+  ]) {
+    await analyze(page, input);
+    await reveal();
+    await assertExactHighlight(page, input, expected, [{ text: "측정값을 비교한 결과,", start: prefix.length }]);
+    assert.ok((await notes.allTextContents()).some(note => note.includes("내용 연결")));
+    assert.equal(await focus.innerText(), finding, "the linked observation remains exact, including a null finding");
+  }
+
+  for (const input of [
+    unsupportedEditorialInput, separateParagraphsEditorial, attributedComparisonInput, unrelatedComparisonInput,
+    plannedNullEditorial, sourceNullEditorial,
+  ]) {
+    const result = await analyze(page, input);
+    await reveal();
+    assert.equal(result.revision, input, "wording stays intact when linked completed student evidence is absent");
+    assert.equal(await preview.locator("mark.review-edit-highlight").count(), 0);
+  }
+}
+
 async function assertDownloadedHighlight(page, report, expected, changes) {
   const parsed = await page.evaluate(reportText => {
     const doc = new DOMParser().parseFromString(reportText, "text/html");
@@ -601,7 +701,7 @@ async function openPage(browser, { route, mobile, device, label, reducedMotion =
   await page.waitForFunction(() => Boolean(document.getElementById("recordText")));
   await assertFitsViewport(page, label + " initial screen");
   if (!baseline) {
-    if (live) assert.match(await page.title(), mobile ? /ver\.25$/ : /ver\.32$/);
+    if (live) assert.match(await page.title(), mobile ? /ver\.26$/ : /ver\.33$/);
     await assertBrandAndBackground(page, label);
     await assertCenteredFlow(page, label + " initial screen");
     await assertLightweightSections(page, [".global-tools", ".setup-card"], label + " input");
@@ -846,6 +946,7 @@ async function runModeFlow(browser, options) {
       await assertExactHighlight(page, inquiry, inquiry, []);
       assert.equal(await page.locator(".review-change-list li").count(), 0, "unchanged wording never inherits old highlights or edit notes");
       await assertStructuralRewrite(page, example);
+      await assertEditorialFocus(page, example);
     }
 
     const samplePrivateInput = inquiry + " 검증용 식별 표식 " + sentinel;
@@ -953,8 +1054,8 @@ async function runReducedMotion(browser, options) {
 
 async function runOfflineCopies(browser) {
   const numberedCopies = [
-    ["라이언의_기록_분석_ver.32.html", { width: 1366, height: 900 }],
-    [join("mobile", "라이언의_기록_분석_모바일_ver.25.html"), { width: 390, height: 844 }],
+    ["라이언의_기록_분석_ver.33.html", { width: 1366, height: 900 }],
+    [join("mobile", "라이언의_기록_분석_모바일_ver.26.html"), { width: 390, height: 844 }],
   ];
   for (const [relative, viewport] of numberedCopies) {
     const context = await browser.newContext({ viewport, offline: true });
@@ -975,6 +1076,8 @@ async function runOfflineCopies(browser) {
       const example = page.locator("#retakeExamplePanel");
       if (await example.getAttribute("open") === null) await example.locator("summary").click();
       await assertExactHighlight(page, rewriteInput, rewriteExpected, rewriteHighlights);
+      const offlineEditorial = await page.evaluate(source => window.RyanRecordReview.assess({ text: source, area: "overall" }).revision.plain, editorialFocusInput);
+      assertEditorialDraft(offlineEditorial);
       await assertFitsViewport(page, relative);
       await assertBrandAndBackground(page, relative, true);
       assert.deepEqual(errors, [], "offline numbered copy browser errors");

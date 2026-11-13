@@ -1285,6 +1285,20 @@
   margin-inline-end: .35em;
 }
 
+#retakeExampleText .review-content-focus {
+  margin-block: 0.9em 0;
+  padding-inline-start: 0.75em;
+  border-inline-start: 2px solid var(--review-tint-line);
+  color: var(--review-ink);
+  overflow-wrap: anywhere;
+}
+
+#retakeExampleText .review-content-focus > strong {
+  display: block;
+  margin-block-end: 0.2em;
+  color: var(--review-deep);
+}
+
 #retakePlacementGuide :is(.review-guidance-reason,.review-followup-question) {
   display: block;
 }

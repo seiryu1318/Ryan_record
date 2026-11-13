@@ -54,7 +54,7 @@ if (server) await new Promise((resolveListen, rejectListen) => {
 const baseUrl = new URL(live ? "https://seiryu1318.github.io/Ryan_record/" : "http://127.0.0.1:" + server.address().port + "/");
 const siteUrl = route => new URL(route.replace(/^\//, ""), baseUrl);
 const allowedRequests = new Set([...staticFiles.keys(), "/favicon.ico",
-  "/record-review.css?v=34", "/record-review.js?v=34"].map(route => siteUrl(route).href));
+  "/record-review.css?v=35", "/record-review.js?v=35"].map(route => siteUrl(route).href));
 
 const inquiry = "수온에 따라 효모 발효 속도가 달라지는 이유를 질문함. 교과서의 효소 단원을 참고해 온도만 다르게 설정하고 같은 양의 효모에서 발생한 기체 부피를 세 차례 측정함. 측정값을 표로 비교하여 수온이 높은 조건에서 기체 부피가 더 큰 이유를 효소 활성과 연결해 해석함. 첫 측정에서 온도계 위치가 달라 오차가 생긴 한계를 확인하고 센서 위치를 통일해 재측정하여 편차가 줄어든 결과를 표에 표시함.";
 const action = "교내 기후 활동에서 자료 정리 역할을 맡아 기상 관측 자료 두 종류를 날짜별로 정리하고 표로 작성함. 완성한 표를 모둠 발표 자료로 제출함.";
@@ -113,6 +113,16 @@ const nullEditorialInput = nullEditorialPrefix + "측정값을 비교함. " + nu
 const nullEditorialExpected = nullEditorialPrefix + "측정값을 비교한 결과, " + nullEditorialResult;
 const plannedNullEditorial = nullEditorialPrefix + "측정값을 비교할 계획임. " + nullEditorialResult;
 const sourceNullEditorial = nullEditorialPrefix + "측정값을 비교함. 보고서에서 " + nullEditorialResult;
+
+const annotationMethod = "용액을 pH 7.4로 맞추고 같은 온도에서 E. coli 집락을 3회 관찰함.";
+const annotationResult = "집락 지름이 24mm로 나타난 것을 확인함.";
+const annotationInput = "집락 크기가 배양 조건에 따라 달라지는 이유를 질문함. " + annotationMethod + " " + annotationResult;
+const annotationReading = "수업에서 제공한 도서 『미생물의 생장』을 읽고 ‘배양 온도와 생장’이라는 설명을 참고함.";
+const withReadingAnnotation = "집락 크기가 배양 조건에 따라 달라지는 이유를 질문함. " + annotationReading + " " + annotationMethod + " " + annotationResult;
+const annotationComplete = inquiry.replace("교과서의 효소 단원을 참고해", "교과서의 효소 단원에서 배운 개념을 실험 설계에 적용해");
+const annotationTeam = "학교 축제 준비 동아리에서 모둠이 안내문을 작성하고 동선을 정리하여 행사를 진행함.";
+const annotationLongSource = annotationInput + " " + Array.from({ length: 26 }, (_, i) =>
+  `장비 관리표의 ${i + 101}번 항목에 배양 접시의 보관 위치와 표식 번호를 기록함.`).join(" ");
 
 const scannerFixtures = {
   quoted: "수업 자료에 실린 ‘하천의 오염 수치를 3회 측정해 감소 원인을 분석하고 보고서를 완성함.’이라는 문장을 읽고 소감을 적음.",
@@ -555,6 +565,136 @@ async function assertEditorialFocus(page, example) {
   }
 }
 
+async function assertAnnotatedDraft(page, example) {
+  const root = page.locator("#reviewAnnotatedDraft");
+  const fact = page.locator("#retakeExampleText .review-rewrite-text");
+  const draft = root.locator(".review-annotated-text");
+  const marker = draft.locator(".review-inline-suggestion");
+  const open = async () => {
+    if (await example.getAttribute("open") === null) await example.locator("summary").click();
+  };
+  const snapshot = async source => {
+    const result = await analyze(page, source);
+    await open();
+    const info = await draft.evaluate(element => {
+      const children = [...element.querySelectorAll(".review-inline-suggestion")];
+      const isolated = element.cloneNode(true);
+      isolated.querySelectorAll(".review-inline-suggestion").forEach(node => node.remove());
+      return {
+        plain: isolated.textContent.replace(/[^\S\r\n]+/g, " ").trim(),
+        full: element.textContent,
+        suggestions: children.map(node => ({ kind: node.dataset.suggestion, text: node.textContent })),
+      };
+    });
+    assert.equal(await fact.textContent(), result.revision, "conditional suggestions do not enter the factual rewrite");
+    assert.doesNotMatch(await fact.textContent(), /\(보완 제안:/);
+    assert.equal(info.plain, result.revision.replace(/[^\S\r\n]+/g, " ").trim(), "removing annotation nodes leaves the factual text intact");
+    return { ...info, result };
+  };
+
+  const science = await snapshot(annotationInput);
+  assert.equal(await root.isVisible(), true);
+  assert.match(await root.locator("h3").innerText(), /보완 제안을 넣은 초안/);
+  assert.ok(science.suggestions.every(({text}) => /^\(보완 제안:\s/.test(text) && text.endsWith(")")));
+  const reading = science.suggestions.find(item => item.kind === "reading");
+  assert.ok(reading && /독서/.test(reading.text) && /있다면|했다면|경우|실제|확인/.test(reading.text),
+    "reading cue asks conditionally for a source without inventing a title");
+  assert.doesNotMatch(reading.text, /『[^』]+』/);
+  const readingAt = science.full.indexOf(reading.text);
+  assert.ok(readingAt >= 0 && readingAt < science.full.indexOf(annotationMethod), "reading cue goes before the method it can inform");
+  const depth = science.suggestions.find(item => item.kind === "depth");
+  assert.ok(depth && science.full.indexOf(depth.text) > science.full.indexOf(annotationResult), "analysis cue is attached after its result");
+  for (const token of ["pH 7.4", "E. coli", "24mm"]) assert.ok(science.result.revision.includes(token));
+  assert.equal(await fact.locator(".review-inline-suggestion").count(), 0);
+  const firstMark = marker.first();
+  assert.equal(await firstMark.isVisible(), true);
+  assert.ok(await firstMark.evaluate(node => {
+    const current = getComputedStyle(node);
+    const parent = getComputedStyle(node.parentElement);
+    return current.backgroundColor !== parent.backgroundColor || current.backgroundImage !== parent.backgroundImage;
+  }), "inline guidance has a visible distinct style");
+  await assertReadableContrast(page, ["#reviewAnnotatedDraft .review-inline-suggestion"], "inline suggestion");
+
+  const apiAnnotations = await page.evaluate(source => {
+    const canonical = window.RyanRecordReview.assess({ text: source, area: "overall", mode: "normal" });
+    return canonical.revision.annotations;
+  }, annotationInput);
+  assert.deepEqual(apiAnnotations.map(({kind,text}) => ({kind,text})), science.suggestions);
+  const apiReading = apiAnnotations.find(item => item.kind === "reading");
+  assert.ok(apiReading.at <= science.result.revision.indexOf(annotationMethod), "reading insertion offset precedes the method");
+
+  const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#downloadButton").click()]);
+  const report = await readFile(await download.path(), "utf8");
+  const exported = await page.evaluate(html => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return {
+      factual: doc.querySelector(".review-rewrite-text")?.textContent,
+      original: doc.querySelector(".source-record")?.textContent,
+      markup: [...doc.querySelectorAll("#reviewAnnotatedDraft .review-inline-suggestion")].map(node => node.textContent),
+      stylesheet: [...doc.querySelectorAll("style")].map(style => style.textContent).join("\n"),
+    };
+  }, report);
+  assert.equal(exported.factual, science.result.revision, "download keeps the factual rewrite separate");
+  assert.ok(exported.original?.includes(annotationInput));
+  assert.doesNotMatch(exported.original, /\(보완 제안:/);
+  assert.deepEqual(exported.markup, science.suggestions.map(item => item.text), "download retains the inline editing prompts");
+  assert.match(exported.stylesheet, /\.review-inline-suggestion\s*\{[^}]*background/i, "download styles inline prompts without external CSS");
+
+  const read = await snapshot(withReadingAnnotation);
+  assert.ok(read.result.revision.includes(annotationReading), "existing reading title and quotation are unchanged");
+  const readingNote = read.suggestions.find(item => item.kind === "reading");
+  assert.ok(readingNote && read.full.indexOf(readingNote.text) > read.full.indexOf(annotationReading),
+    "a cue about existing reading comes after the reading sentence");
+  assert.match(readingNote.text, /원문에 적힌|읽기 경험|읽은 사실/);
+
+  await openReviewSection(page, "analysis");
+  await page.locator("[data-area='behavior']").click();
+  await analyze(page, action);
+  await open();
+  assert.equal(await draft.locator('[data-suggestion="reading"]').count(), 0, "behavior advice does not force a book suggestion");
+  await openReviewSection(page, "analysis");
+  await page.locator("[data-area='club']").click();
+  const club = await snapshot(annotationTeam);
+  const role = club.suggestions.find(item => item.kind === "role");
+  assert.ok(role && /개인 기여|학생 개인/.test(role.text), "team-only activities prompt for the student's own contribution");
+  assert.ok(club.full.indexOf(role.text) > club.full.indexOf(annotationTeam), "role prompt follows the team activity it refers to");
+  assert.equal(await draft.locator('[data-suggestion="reading"]').count(), 0, "team participation does not force a reading cue");
+  assert.equal(club.suggestions.filter(item => item.kind === "method").length, 0, "role is not duplicated by generic method advice");
+  await openReviewSection(page, "analysis");
+  await page.locator("[data-area='overall']").click();
+
+  for (const incomplete of [
+    "효모를 관찰하고 관련된 내용에 관심을 보이며 적극적으로 참여함.",
+    "배양 조건에 따른 집락 크기를 비교하려 했으나 실제로 측정하지 못함. 다음에는 같은 조건에서 3회 관찰할 계획임.",
+  ]) {
+    const unfinished = await snapshot(incomplete);
+    assert.ok(unfinished.suggestions.some(item => ["method", "result"].includes(item.kind)), "give an actionable local next step");
+    assert.equal(unfinished.suggestions.some(item => item.kind === "reading"), false, "unfinished or vague work does not force a book suggestion");
+    assert.equal(unfinished.result.revision, incomplete, "unfinished work and plan wording stay factual");
+  }
+
+  const long = await snapshot(annotationLongSource);
+  assert.ok(long.result.revision.includes("126번 항목에 배양 접시의 보관 위치와 표식 번호를 기록함."), "long source stays intact");
+  assert.ok(long.suggestions.some(item => item.kind === "depth" && /수치|경향|비교/.test(item.text) && !/대사|화자/.test(item.text)),
+    "later inventory wording does not switch a scientific cue to literature");
+  const longPresentation = await marker.evaluateAll(nodes => nodes.map(node => {
+    const style = getComputedStyle(node);
+    return { size: node.textContent.length, display: style.display, overflow: style.textOverflow, clamp: style.webkitLineClamp };
+  }));
+  assert.ok(longPresentation.some(item => item.size >= 50), "a full substantive suggestion remains available in a long record");
+  assert.ok(longPresentation.every(item => item.display !== "none" && item.overflow !== "ellipsis" && ["", "none"].includes(item.clamp)),
+    "annotation text is not truncated by the layout");
+
+  const fullyDocumented = await analyze(page, annotationComplete);
+  await open();
+  const completeAnnotations = await page.evaluate(source =>
+    window.RyanRecordReview.assess({ text: source, area: "overall", mode: "normal" }).revision.annotations, annotationComplete);
+  assert.equal(fullyDocumented.revision, annotationComplete);
+  assert.deepEqual(completeAnnotations, [], "a documented reading application and complete inquiry need no forced cue");
+  assert.equal(await root.isVisible(), false, "records with no relevant cues do not show an empty annotated draft");
+  assert.equal(await marker.count(), 0, "empty draft cannot retain cues from the previous input");
+}
+
 async function assertDownloadedHighlight(page, report, expected, changes) {
   const parsed = await page.evaluate(reportText => {
     const doc = new DOMParser().parseFromString(reportText, "text/html");
@@ -701,7 +841,7 @@ async function openPage(browser, { route, mobile, device, label, reducedMotion =
   await page.waitForFunction(() => Boolean(document.getElementById("recordText")));
   await assertFitsViewport(page, label + " initial screen");
   if (!baseline) {
-    if (live) assert.match(await page.title(), mobile ? /ver\.27$/ : /ver\.34$/);
+    if (live) assert.match(await page.title(), mobile ? /ver\.28$/ : /ver\.35$/);
     await assertBrandAndBackground(page, label);
     await assertCenteredFlow(page, label + " initial screen");
     await assertLightweightSections(page, [".global-tools", ".setup-card"], label + " input");
@@ -786,7 +926,7 @@ async function runModeFlow(browser, options) {
         assert.ok(guideText.includes(section), "missing guide section: " + section);
       }
       assert.match(guideText, /평가 영역을 고르지 않고.*100점/s);
-      assert.match(guideText, /대괄호.*확인한 내용/s);
+      assert.match(guideText, /보완 제안을 넣은 초안.*괄호.*근거.*문장으로 바꾸/s);
       await assertMotionTriggered(page, "guide", "guidePanel");
       await assertMotionPolicy(page, label + " guide", "guide");
       await assertReadableContrast(page, [mobile ? "#reviewSectionSelect" : "#guideTab", "#guidePanel h2"], label + " guide");
@@ -912,7 +1052,7 @@ async function runModeFlow(browser, options) {
       await assertExactHighlight(page, rewriteInput, rewriteExpected, rewriteHighlights);
       await assertTrackProfile(page, false);
       await assertKeyHighlight(page, rewriteInput, revised);
-      assert.match(await page.locator("#retakeWarningText").textContent(), /대괄호.*사실/);
+      assert.match(await page.locator("#retakeWarningText").textContent(), /괄호.*(?:사실|기록)/);
       const changes = page.locator(".review-change-list li");
       assert.equal(await changes.count(), 2, "the quoted occurrence does not become a suggested edit");
       assert.match(await changes.nth(1).innerText(), /수정 전.*관찰을 실시함.*수정 후.*관찰함/s);
@@ -947,6 +1087,7 @@ async function runModeFlow(browser, options) {
       assert.equal(await page.locator(".review-change-list li").count(), 0, "unchanged wording never inherits old highlights or edit notes");
       await assertStructuralRewrite(page, example);
       await assertEditorialFocus(page, example);
+      await assertAnnotatedDraft(page, example);
     }
 
     const samplePrivateInput = inquiry + " 검증용 식별 표식 " + sentinel;
@@ -1054,8 +1195,8 @@ async function runReducedMotion(browser, options) {
 
 async function runOfflineCopies(browser) {
   const numberedCopies = [
-    ["라이언의_기록_분석_ver.34.html", { width: 1366, height: 900 }],
-    [join("mobile", "라이언의_기록_분석_모바일_ver.27.html"), { width: 390, height: 844 }],
+    ["라이언의_기록_분석_ver.35.html", { width: 1366, height: 900 }],
+    [join("mobile", "라이언의_기록_분석_모바일_ver.28.html"), { width: 390, height: 844 }],
   ];
   for (const [relative, viewport] of numberedCopies) {
     const context = await browser.newContext({ viewport, offline: true });
@@ -1078,6 +1219,8 @@ async function runOfflineCopies(browser) {
       await assertExactHighlight(page, rewriteInput, rewriteExpected, rewriteHighlights);
       const offlineEditorial = await page.evaluate(source => window.RyanRecordReview.assess({ text: source, area: "overall" }).revision.plain, editorialFocusInput);
       assertEditorialDraft(offlineEditorial);
+      const offlineAnnotations = await page.evaluate(source => window.RyanRecordReview.assess({ text: source, area: "overall" }).revision.annotations, annotationInput);
+      assert.ok(offlineAnnotations.some(item => item.kind === "reading") && offlineAnnotations.some(item => item.kind === "depth"));
       await assertFitsViewport(page, relative);
       await assertBrandAndBackground(page, relative, true);
       assert.deepEqual(errors, [], "offline numbered copy browser errors");

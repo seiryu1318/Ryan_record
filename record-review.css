@@ -1297,6 +1297,34 @@
   color: var(--review-deep);
 }
 
+#reviewAnnotatedDraft:not([hidden]) {
+  margin-block: 1.35rem 1rem;
+  padding-block-start: 1.05rem;
+  border-block-start: 1px solid var(--review-line);
+}
+
+#reviewAnnotatedDraft .review-annotation-note {
+  margin-block: .3rem .8rem;
+  color: var(--review-muted) !important;
+  font-size: .88rem;
+}
+
+#reviewAnnotatedDraft .review-annotated-text {
+  margin-block: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.85;
+}
+
+#reviewAnnotatedDraft .review-inline-suggestion {
+  color: #24484a !important;
+  background: #e0efeb !important;
+  padding-inline: .1em;
+  font-weight: 600;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 #retakePlacementGuide :is(.review-guidance-reason,.review-followup-question) {
   display: block;
 }

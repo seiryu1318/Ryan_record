@@ -1,7 +1,7 @@
 /* Ryan Record: evidence-based review. Runs locally in the browser; no I/O. */
 (function (root) {
   "use strict";
-  const VERSION = "v33-record-evidence@1";
+  const VERSION = "v35-record-evidence@1";
   const AREAS = {
     overall: { label:"전반 분석", start:"어떤 수업·관찰에서 어떤 질문이나 문제가 생겼는지", method:"학생이 선택한 기준·자료·방법", depth:"결과를 통해 무엇을 판단했고 그 근거가 무엇인지" },
     autonomy: { label:"자율활동", start:"학급이나 학교에서 어떤 필요를 발견했는지", method:"학생이 맡은 역할과 직접 제안하거나 조정한 방법", depth:"학생의 조치 뒤 학급 운영이나 구성원 참여가 어떻게 달라졌는지" },
@@ -540,7 +540,8 @@
       const start = plain.length;
       plain += patch.after;
       const end = start+patch.after.trimEnd().length;
-      edits.push({before:original.slice(patch.at,patch.stop).trim(),after:plain.slice(start,end),start,end,reason:patch.reason,type:patch.type});
+      edits.push({before:original.slice(patch.at,patch.stop).trim(),after:plain.slice(start,end),start,end,
+        sourceStart:patch.at,sourceEnd:patch.stop,shift:patch.after.length-(patch.stop-patch.at),reason:patch.reason,type:patch.type});
       from = patch.stop;
     }
     plain += original.slice(from);
@@ -557,6 +558,159 @@
       at = end;
     }
     return html + escape(revision.plain.slice(at));
+  }
+
+  const BOOK_OR_TEXT = /책|도서|교과서|독서|논문|기사|원문|사료|참고\s*문헌|보고서를\s*읽|[』」》](?:을|를)\s*읽/;
+  const BOOK_APPLICATION = /(?:책|도서|교과서|독서|논문|기사|원문|사료|참고\s*문헌).{0,40}(?:바탕으로|토대로|근거로|에서\s*(?:얻|배운)|개념을\s*적용|기준을\s*적용|풀이에\s*적용|문제에\s*적용|대조|비교\s*기준|실험\s*설계|분류\s*기준)/;
+  const INQUIRY_TOPICS = /탐구|비교|대조|분석|실험|관찰|측정|검증|자료|사례|풀이|원리|개념|증명|해석|설문|통계|코드|모형/;
+  const TECH_TOPIC = /실험|측정|변인|대조군|집락|농도|온도|효모|발효|오차|단위|pH|통계|표본|빈도/i;
+  const TEXT_TOPIC = /소설|(?:^|\s)시(?:의|에서)|문학|작품|대사|화자|인물의|서술|어휘|구문|번역|담화|사료|원문/;
+  const MATH_TOPIC = /기하|함수|수열|방정식|확률|미적분|공식|수학|증명|반례/;
+  const CODE_TOPIC = /알고리즘|코드|구현|프로그램|시제품|모형|시뮬레이션|프로토타입/;
+  const LIMIT_WORDS = /일반화|한계|반례|오차|제약|불일치|표본.{0,10}(?:좁|적|치우)|재검증/;
+
+  function annotationProfile(area,subject,sceneText,community) {
+    if (area === "behavior" || community || area === "autonomy") return "community";
+    if (/^(?:math|수학|대수|기하|미적분|확률과\s*통계)$/i.test(subject) || MATH_TOPIC.test(sceneText)) return "math";
+    if (/^(?:korean|english|history|국어|영어|문학|역사)$/i.test(subject) || TEXT_TOPIC.test(sceneText)) return "text";
+    if (TECH_TOPIC.test(sceneText)) return "experiment";
+    if (CODE_TOPIC.test(sceneText)) return "design";
+    if (area === "club" && GROUP.test(sceneText)) return "team";
+    return area === "career" ? "career" : "general";
+  }
+
+  function revisionAnnotations(raw,revision,{area,subject,scene,frames,groups,gaps}) {
+    if (!revision.plain.trim()) return [];
+    const sentences = spans(raw,SENTENCE_BREAK,0,true,scanQuotes(raw).allMasked);
+    const finalSentences = spans(revision.plain,SENTENCE_BREAK,0,true,scanQuotes(revision.plain).allMasked);
+    const group = groups.find(part => part.includes(scene?.action)) || [];
+    const groupText = group.map(frame => frame.text).join(" ");
+    const profile = annotationProfile(area,subject,groupText || raw,scene?.community);
+    const action = scene?.action || frames.find(frame => frame.action && frame.actor === "student" && !frame.borrowed);
+    const unfinished = frames.find(frame => frame.actor === "student" && (frame.plan || frame.neg) && ACTION.test(frame.text));
+    const nullObservation = frame => frame.actor === "student" && EXACT_NULL_RESULT.test(frame.text)
+      && !SOURCE_ACTOR.test(frame.text) && !REPORTING_SUFFIX.test(frame.text)
+      && group.some(method => method.method && method.index < frame.index && frame.index-method.index <= 3);
+    const outcome = frame => frame && !frame.plan && !frame.neg && !frame.borrowed
+      && (frame.ownResult || scene?.community && frame.peerOutcome)
+      && (!DIRECT_MEASUREMENT.test(frame.span) || CHANGE_DESCRIPTION.test(frame.text));
+    const explicitOutcome = frame => frame && (outcome(frame) || nullObservation(frame)) &&
+      (CHANGE_DESCRIPTION.test(frame.text) || frame.validNull || frame.artifact || scene?.community && frame.peerOutcome);
+    const observation = group.find(frame => frame.index > (action?.index ?? -1) && explicitOutcome(frame))
+      || group.find(frame => /^(?:관찰\s*결과|확인한\s*결과|결과)\s*[:：]/.test(frame.text) && explicitOutcome(frame))
+      || (outcome(scene?.end) ? scene.end : null);
+    const cues = new Map();
+    const lead = sentences[0] || {start:0,end:raw.length,span:raw};
+    const rawSentence = item => item?.index != null ? sentences[item.index] : item;
+
+    function position(item, side) {
+      const source = rawSentence(item);
+      if (!source) return side === "before" ? finalSentences[0]?.start ?? 0 : finalSentences.at(-1)?.end ?? 0;
+      const snap = point => {
+        const unit = finalSentences.find(unit => side === "before" ? unit.start <= point && point < unit.end : unit.start < point && point <= unit.end);
+        return unit ? unit[side === "before" ? "start" : "end"] : Math.max(0,Math.min(revision.plain.length,point));
+      };
+      let shift = 0;
+      for (const edit of revision.edits) {
+        if (source.end <= edit.sourceStart) break;
+        if (source.start >= edit.sourceEnd) { shift += edit.shift; continue; }
+        if (source.start >= edit.sourceStart && source.end <= edit.sourceEnd && edit.after) {
+          const index = edit.after.indexOf(source.span);
+          if (index >= 0) {
+            const start = edit.start+index;
+            return snap(side === "before" ? start : start+source.span.length);
+          }
+        }
+        if (source.start >= edit.sourceStart && source.end <= edit.sourceEnd && !edit.after) {
+          return side === "before"
+            ? finalSentences.find(unit => unit.start >= edit.start)?.start ?? finalSentences[0]?.start ?? 0
+            : finalSentences.find(unit => unit.end > edit.start)?.end ?? finalSentences.at(-1)?.end ?? 0;
+        }
+        if ((side === "before" ? source.start : source.end) <= edit.sourceEnd) {
+          const target = finalSentences.find(unit => unit.end > edit.start);
+          return side === "before" ? target?.start ?? edit.start : target?.end ?? edit.end;
+        }
+        shift += edit.shift;
+      }
+      const point = (side === "before" ? source.start : source.end)+shift;
+      return snap(point);
+    }
+    function add(kind,title,body,item,side = "after") {
+      if (cues.has(kind) || !body) return;
+      const at = position(item,side);
+      cues.set(kind,{at,kind,text:"(보완 제안: "+title+" — "+body+")"});
+    }
+
+    const methodBody = {
+      experiment:"실제로 비교한 대상과 조건, 측정 횟수와 단위 중 원문에 빠진 정보가 있다면 여기에 적어 보세요. 어떤 조건을 달리했고 어떤 조건은 같게 두었는지 구분하면 비교의 근거가 분명해집니다.",
+      text:"어느 장면, 표현 또는 자료의 어느 부분을 골랐고 무엇을 기준으로 읽거나 비교했는지 적어 보세요. 직접 본 근거와 학생의 해석을 나누면 판단의 과정이 드러납니다.",
+      math:"문제를 풀 때 적용한 개념과 가정, 실제로 사용한 풀이 방법을 연결해 보세요. 식이나 다른 풀이를 실제로 확인했다면 어떤 조건에서 성립했는지도 적어 보세요.",
+      design:"학생이 직접 바꾼 기능, 설계 조건 또는 시험 기준을 적어 보세요. 바꾸기 전후의 차이를 확인했다면 실제로 확인한 항목을 이어 쓰면 좋습니다.",
+      community:"어떤 상황에서 학생이 누구에게 무엇을 제안하거나 어떻게 도왔는지 적어 보세요. 성실함이나 협력이라는 평가어보다 관찰할 수 있었던 행동을 먼저 쓰면 좋습니다.",
+      team:"모둠의 활동과 학생 개인이 맡은 일을 구분해 보세요. 실제로 담당한 자료, 조정한 의견 또는 수정한 부분이 결과물에 어떻게 쓰였는지 확인해 적어 보세요.",
+      career:"직접 비교한 두 선택지나 자료가 있다면, 학생이 어떤 기준으로 살폈고 그 기준을 왜 택했는지 밝혀 보세요.",
+      general:"학생이 직접 선택한 자료나 방법과 그 이유를 적어 보세요. 참여 사실만 적기보다 실제로 한 일을 한 단계 더 구체화하면 좋습니다."
+    };
+    const outcomeBody = profile === "community"
+      ? "행동 뒤 실제로 관찰한 상대의 반응이나 달라진 상황이 있다면 여기에 적어 보세요. 반응을 확인하지 못했다면 행동까지만 남기세요."
+      : profile === "team" || profile === "design"
+        ? "직접 완성하거나 확인한 결과물의 부분을 구체적으로 적어 보세요. 확인한 반응이나 비교 결과가 있다면 이어 쓰고, 팀 전체 성과와 개인의 기여는 구분하세요."
+        : "직접 확인한 차이, 관찰값 또는 결과물의 구체적인 내용을 적어 보세요. 차이가 없었던 경우에는 그 사실을 그대로 쓰고, 수행하지 못한 활동은 결과처럼 쓰지 마세요.";
+    const depthBody = {
+      experiment:"어떤 수치나 경향을 근거로 그렇게 해석했는지 적어 보세요. 비교만으로 원인을 단정하기 어렵다면 결과가 성립하는 범위나 점검한 조건까지 밝혀 보세요.",
+      text:"어느 장면, 대사, 표현 또는 자료의 단서가 해석을 뒷받침했는지 적어 보세요. 다른 해석도 검토했다면 무엇을 근거로 판단했는지 설명해 보세요.",
+      math:"어떤 가정에서 결론이 성립하는지 밝혀 보세요. 실제로 다른 풀이, 반례 또는 경계 조건을 점검했다면 무엇을 비교해 판단했는지 적어 보세요.",
+      design:"어느 결과를 보고 설계를 유지하거나 수정했는지 적어 보세요. 다시 시험했다면 바꾼 부분과 확인한 차이를 연결해 보세요.",
+      community:"같은 행동이 다른 상황에서도 이어졌거나 상대의 반응을 보고 접근을 바꾼 일이 실제로 있다면, 그때의 상황과 학생이 한 일을 덧붙여 보세요.",
+      team:"학생이 맡은 부분이 결과물에 어떻게 반영됐는지, 의견을 받아 실제로 수정했다면 무엇을 바꾸고 어떤 차이를 확인했는지 적어 보세요.",
+      career:"이 활동에서 알게 된 점이 이후의 관심 분야나 선택 기준에 실제로 어떤 영향을 주었는지 설명해 보세요. 바뀐 점이 없다면 판단 기준을 구체화한 부분만 적으세요.",
+      general:"직접 확인한 결과를 근거로 어떤 판단을 내렸는지 적어 보세요. 후속 활동을 실제로 했다면 앞선 결과에서 무엇을 이어 갔는지도 덧붙여 보세요."
+    };
+    for (const gap of gaps) {
+      const anchor = frames.find(frame => frame.start === gap.anchor?.start);
+      if (gap.key === "start") add("start","출발 질문",
+        profile === "community" ? "어떤 어려움이나 필요를 보고 학생이 행동했는지, 교사가 실제로 관찰한 상황을 먼저 적어 보세요."
+          : "이 활동을 시작하게 한 수업 장면, 관찰, 또는 궁금했던 점을 적어 보세요. 당시 질문이 있었다면 실제 비교하거나 확인한 내용과 연결하세요.",
+        action || anchor || lead,"before");
+      if (gap.key === "action" && !(profile === "team" && gaps.some(item => item.key === "role"))) add("method",profile === "community" ? "학생이 한 행동" : "수행 방법",
+        !action && unfinished ? "계획했거나 하지 못한 일과 별개로, 학생이 실제로 준비하거나 완료한 부분이 있다면 무엇을 어떻게 했는지 적어 보세요." : methodBody[profile],
+        action || unfinished || anchor || lead);
+      if (gap.key === "result" && !observation && (action || !unfinished)) add("result",profile === "community" ? "상대의 반응" : "직접 확인한 결과",outcomeBody,action || anchor || lead);
+      if (gap.key === "depth") add("depth",profile === "community" ? "이어진 실천" : "결과 해석",depthBody[profile],observation || anchor || action || lead);
+      if (gap.key === "role") add("role","개인 기여",methodBody.team,action || anchor || lead);
+      if (gap.key === "course") add("course","교과 개념 활용",
+        "수업에서 배운 개념 중 실제로 사용한 것을 골라, 그 개념을 어느 자료나 과제에 어떻게 적용했고 무엇을 판단하는 데 도움이 됐는지 적어 보세요.",
+        action || anchor || lead);
+    }
+    if (observation && !scene?.depth) add("depth",profile === "community" ? "이어진 실천" : "결과 해석",depthBody[profile],observation);
+    if (area === "club" && action && GROUP.test(raw) && !observation && !/반영|기여|담당|맡은\s*부분/.test(groupText)) {
+      add("role","개인 기여",methodBody.team,action);
+    }
+    const inquiry = area !== "behavior" && area !== "autonomy" && !["community","team"].includes(profile)
+      && action?.method && action.tokens >= 2 && INQUIRY_TOPICS.test(groupText);
+    if (inquiry && !BOOK_APPLICATION.test(groupText)) {
+      const read = group.find(frame => frame.actor === "student" && !frame.plan && !frame.neg && !frame.borrowed
+        && BOOK_OR_TEXT.test(frame.text) && /읽|참고|찾|검토/.test(frame.text));
+      const strongChain = Boolean(scene?.start && scene?.depth && (scene.rechecked || scene.follow || LIMIT_WORDS.test(groupText)));
+      const standaloneWork = /(?:탐구|비교|분석|실험|관찰|측정|검증|해석|증명|설계|구현|수집|분류|조사|정리|작성)(?:함|했음|하였음)[.。]?$/.test(rawSentence(action)?.span || "")
+        && !/(?:하지\s*못|못함|않음|계획임|예정임)/.test(rawSentence(action)?.span || "");
+      if (read || !strongChain && (observation || standaloneWork)) add("reading","독서 활용",
+        read ? "원문에 적힌 읽기 경험에서 실제로 얻은 개념이나 관점이 있다면, 그 내용이 질문, 비교 기준 또는 결과 해석에 어떻게 쓰였는지 밝혀 보세요. 읽은 사실과 적용한 사실은 구분하세요."
+          : "관련 책이나 교과서 등을 실제로 읽고 활용했다면, 자료 이름을 나열하기보다 어떤 개념이나 근거를 얻었고 그것을 질문을 좁히거나 방법을 정하거나 결과를 해석하는 데 어떻게 썼는지 적어 보세요. 해당 경험이 없으면 이 제안은 빼도 됩니다.",
+        read || action,read ? "after" : "before");
+    }
+    return [...cues.values()].sort((a,b) => a.at-b.at || Number(a.kind === "reading")-Number(b.kind === "reading"));
+  }
+
+  function annotatedRevision(revision) {
+    let cursor = 0;
+    return revision.annotations.map(item => {
+      const prefix = escape(revision.plain.slice(cursor,item.at));
+      const before = /\S/u.test(revision.plain.charAt(item.at-1)) ? " " : "";
+      const after = /\S/u.test(revision.plain.charAt(item.at)) ? " " : "";
+      cursor = item.at;
+      return prefix+before+'<mark class="review-inline-suggestion" data-suggestion="'+escape(item.kind)+'">'+escape(item.text)+'</mark>'+after;
+    }).join("")+escape(revision.plain.slice(cursor));
   }
 
   function assess(payload = {}) {
@@ -686,6 +840,8 @@
       groups.length > 1 ? {label:"여러 활동",text:"다른 활동의 결과를 가져와 앞 활동의 근거로 묶지 않았습니다."} : null,
       guidance[0] ? {label:"가장 먼저 보완할 근거",text:guidance[0].reason} : null,
     ].filter(Boolean).slice(0,3);
+    const revision = rewrite(text,{scene:best,frames,groups});
+    revision.annotations = revisionAnnotations(text,revision,{area,subject:textOf(payload.subject),scene:best,frames,groups,gaps});
     return {engineVersion:VERSION,area,areaLabel:profile.label,strictGrade:grade,normalGrade,displayGrade,score,rationale,cards,evidence:evidenceList,reasoning,
       strengths:strengths.length ? strengths : ["뚜렷한 행동·결과의 연결을 아직 확인하지 못했습니다."],
       weaknesses:guidance.length ? guidance.map(item => ({
@@ -694,7 +850,7 @@
         course:"선택 교과의 개념과 수행 방법의 연결이 부족합니다.",role:"팀 성과와 학생 개인의 기여가 구분되지 않습니다."
       })[item.key]) : ["이 문구에서 우선 보완할 근거는 확인되지 않았습니다."],
       suggestions:guidance.length ? guidance.map(item => item.what) : ["수치와 자료 출처를 다시 확인한 뒤, 현재 문장의 행동과 결과 연결을 유지하세요."],
-      guidance,revision:rewrite(text,{scene:best,frames,groups}),flags:{completedEpisode:Boolean(end),supportedDepth:Boolean(areaDepth),courseLink,plannedOnly:Boolean(plan&&!end),sourceOnly:Boolean(source&&!end),negatedOnly:Boolean(neg&&!end),communityRoute:Boolean(best?.community),sceneCount:groups.length,quotedActionExcluded:quotes.masked,borrowedActionSeparated:hasBorrowedAction}};
+      guidance,revision,flags:{completedEpisode:Boolean(end),supportedDepth:Boolean(areaDepth),courseLink,plannedOnly:Boolean(plan&&!end),sourceOnly:Boolean(source&&!end),negatedOnly:Boolean(neg&&!end),communityRoute:Boolean(best?.community),sceneCount:groups.length,quotedActionExcluded:quotes.masked,borrowedActionSeparated:hasBorrowedAction}};
   }
 
   function renderRevision(canonical, doc) {
@@ -705,6 +861,14 @@
     const body = byId("retakeExampleText");
     const guide = byId("retakePlacementGuide");
     const source = byId("retakeSourceAnchors");
+    const draft = byId("reviewAnnotatedDraft");
+    if (draft) {
+      draft.hidden = !revision.annotations.length;
+      draft.innerHTML = revision.annotations.length
+        ? '<h3>보완 제안을 넣은 초안</h3><p class="review-annotation-note">괄호 안은 보완할 자리입니다. 실제로 한 일이나 확인한 내용으로 바꾸고, 해당하지 않는 제안은 지우세요.</p>'
+          +'<p class="review-annotated-text">'+annotatedRevision(revision)+'</p>'
+        : "";
+    }
     if (body) body.innerHTML = '<h3>원문을 바탕으로 고친 문장</h3><p class="review-rewrite-text">'+highlightedRevision(revision)+'</p>'
       + (revision.focus ? '<p class="review-content-focus"><strong>'+escape(revision.focus.kind)+'</strong> '+keyHighlight(revision.focus.span)+'</p>' : '')
       + (revision.edits.length ? '<ul class="review-change-list">'+revision.edits.map(edit =>
@@ -725,7 +889,7 @@
       : '<li>현재 구조를 유지하고, 실제 관찰한 사실과 일치하는지만 확인하세요.</li>';
     if (source) source.innerHTML = anchors.length ? anchors.map(item => '<li>“'+escape(item.span)+'”</li>').join("") : '<li>연결할 원문 근거를 확인하지 못했습니다.</li>';
     const warning = byId("retakeWarningText");
-    if (warning) warning.textContent = "대괄호가 있는 문장은 작성 틀입니다. 확인할 사실을 채우기 전에는 기록에 넣지 마세요.";
+    if (warning) warning.textContent = "괄호 속 제안과 대괄호가 있는 작성 틀에는 실제로 확인한 사실만 채우세요.";
     const status = byId("retakeStatus");
     if (status) status.textContent = revision.edits.length ? "고친 부분은 형광펜으로, 덜어낸 문구는 수정 전후 목록에 표시했습니다." : "자동으로 바꾼 표현은 없습니다.";
     panel.dataset.ready = "true";

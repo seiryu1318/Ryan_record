@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>라이언의 기록 분석 모바일 ver.27</title>
+  <title>라이언의 기록 분석 모바일 ver.28</title>
   <style>
 
 /* noto-sans-kr-cyrillic-wght-normal */
@@ -3777,8 +3777,8 @@ body.mobile-build{font-size:15px}
       #duelPanel .duel-analysis-columns { grid-template-columns:1fr !important; }
     }
   </style>
-  <link rel="stylesheet" href="../record-review.css?v=34">
-  <script defer src="../record-review.js?v=34"></script>
+  <link rel="stylesheet" href="../record-review.css?v=35">
+  <script defer src="../record-review.js?v=35"></script>
 </head>
 <body class="mobile-build">
 
@@ -4039,11 +4039,12 @@ body.mobile-build{font-size:15px}
           <div>
             <p class="evaluation-kicker">원문 사실 보존</p>
             <h2 id="retakeExampleHeading">입력 문구 수정안</h2>
-            <p>학생이 한 일과 확인한 결과가 먼저 드러나도록 문장을 고칩니다. 덜어낸 문구와 이유는 수정 전후에서 확인할 수 있습니다.</p>
+            <p>학생이 한 일과 결과가 먼저 드러나도록 고칩니다. 보완 제안을 넣은 초안에서는 추가할 내용을 괄호로 표시합니다.</p>
           </div>
         </div>
         <p class="retake-warning" role="note"><span id="retakeWarningText">작성 틀은 실제로 확인한 사실을 채운 뒤 사용하세요.</span></p>
         <div id="retakeExampleText">분석 후 사실을 보존한 수정안을 표시합니다.</div>
+        <section id="reviewAnnotatedDraft" hidden></section>
         <section id="reviewCompletionExample" hidden></section>
         <div class="retake-guide-grid">
           <section class="retake-guide-box"><h3>보완할 위치와 확인할 사실</h3><ul id="retakePlacementGuide"><li>분석 후 보완이 필요한 원문과 넣을 위치, 수정 방향을 보여 줍니다.</li></ul></section>
@@ -4198,7 +4199,7 @@ body.mobile-build{font-size:15px}
           <ol>
             <li><strong>원문 근거</strong>에서 판정에 사용된 구절을 확인하세요.</li>
             <li><strong>수정안과 보완할 사실</strong>에서 형광펜으로 표시한 부분과 덜어낸 문구를 확인하세요. 날짜, 수치, 단위와 활동 사실은 그대로 둡니다.</li>
-            <li><strong>보완할 위치</strong>와 <strong>확인할 사실</strong>을 참고해 실제 기록이나 산출물에서 근거를 찾으세요. 대괄호는 확인한 내용으로 채우고, 근거를 찾지 못한 항목은 빼세요.</li>
+            <li><strong>보완 제안을 넣은 초안</strong>의 괄호를 확인하세요. 실제 기록이나 산출물에서 근거를 찾은 뒤 괄호를 문장으로 바꾸고, 해당하지 않는 제안은 지우세요.</li>
           </ol>
           <p><strong>예시:</strong> “자료를 비교함” 뒤에는 실제로 비교한 항목과 확인한 차이를 적습니다. 문학이라면 어느 장면과 대사가 해석을 뒷받침하는지, 수학이라면 어떤 조건이나 다른 풀이로 결론을 점검했는지 덧붙일 수 있습니다.</p>
         </article>
@@ -4212,7 +4213,7 @@ body.mobile-build{font-size:15px}
   (() => {
     "use strict";
 
-    const APP_VERSION = "모바일 ver.27";
+    const APP_VERSION = "모바일 ver.28";
 
     const AREA = {
       overall: {
@@ -8570,7 +8571,7 @@ body.mobile-build{font-size:15px}
       const sourceText = escapeHtml(window.__v21RawBeforeAnalyze ?? lastResult.text).replace(/\r?\n/g, "<br>");
       const report = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>라이언의 기록 분석 ${APP_VERSION}</title><style>
         :root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#fff7fb;color:#24131d;font-family:Arial,"Noto Sans KR",sans-serif;line-height:1.65}main{width:min(1120px,calc(100% - 28px));margin:24px auto 48px}.report-head{padding:22px;border:1px solid #e6bbcf;border-radius:18px;background:#fff}.report-head h1{margin:0 0 6px;color:#9b2458}.report-head p{margin:0;color:#725365}.source-record{margin-top:16px;padding:18px;border:1px solid #e8c7d6;border-radius:16px;background:#fff}.source-record h2{margin:0 0 10px;font-size:1.05rem;color:#9b2458}.source-record p{margin:0;white-space:normal}.result-heading{margin:26px 0 12px}.result-grid,.evaluation-grid,.flow-grid,.profile-grid,.standard-detail-grid,.review-case-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card,.panel,.evaluation-item,.flow-item,.profile-item,.standard-detail-card,.review-case-card,.evidence-box{padding:18px;border:1px solid #e4bfd0;border-radius:16px;background:#fff;break-inside:avoid}.panel{margin-top:14px}.panel-head,.evaluation-item-head,.review-case-head,.standard-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.panel-title,h2,h3{color:#7f1948}.grade{font-size:3rem;font-weight:900;color:#bb2d6d}.score-num,.compliance-percent,.pink-emphasis{font-weight:900;color:#c22b72}.meter{height:9px;border-radius:999px;background:#f0d9e4;overflow:hidden}.meter span{display:block;height:100%;background:#cc3b7d}.review-text p{margin:.45em 0}.review-case-grade,.rating-pill,.standard-detail-grade,.flow-grade,.profile-grade{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f8dce9;color:#962457;font-weight:900}.snu-status{display:inline-flex;padding:5px 9px;border-radius:999px;font-weight:900}.is-strong{color:#126641;background:#dcf5e8}.is-partial{color:#875207;background:#fff0d2}.is-weak{color:#92243a;background:#ffe0e7}.snu-question{padding:9px;border-radius:10px;background:#fff1f7;font-weight:800}.snu-criterion-list{display:flex;flex-wrap:wrap;gap:5px}.snu-criterion-chip{padding:4px 7px;border:1px solid #ddafc4;border-radius:999px;font-size:.75rem;font-weight:800}.snu-evidence-list{margin:6px 0 0;padding-left:1.1rem}.snu-judgement{line-height:1.6}.standard-summary{display:grid;grid-template-columns:140px 1fr;gap:14px}.standard-score strong{font-size:2.5rem;color:#b92d6b}.standard-tags{display:flex;flex-wrap:wrap;gap:6px}.standard-tag{padding:5px 8px;border-radius:999px;background:#f7e2ec}.logic-chain{display:grid;gap:8px}.logic-step{padding:10px;border-left:4px solid #d74a88;background:#fff7fb}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:11px;border:1px solid #ead0dc;text-align:left;vertical-align:top}.grade-legend{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.grade-legend>div{padding:10px;border:1px solid #ead0dc;border-radius:12px}.priority-box{margin-top:12px;padding:14px;border-radius:14px;background:#fff1f7}.snu-evidence,.snu-next,.evaluation-evidence{border-top:1px solid #ecd5df;padding-top:8px}.profile-caution,.subject-mismatch-alert,.abc-calibration-note{padding:10px;border-radius:10px;background:#fff0f6}.disclaimer{margin-top:12px;padding:12px;border-radius:12px;background:#fff6e7}@media(max-width:760px){.result-grid,.evaluation-grid,.flow-grid,.profile-grid,.standard-detail-grid,.review-case-grid,.grade-legend{grid-template-columns:1fr}.standard-summary{grid-template-columns:1fr}table,thead,tbody,tr,th,td{display:block;width:100%}thead{display:none}tr{margin-bottom:10px;border:1px solid #ead0dc;border-radius:12px;padding:10px}th,td{border:0;padding:7px 0}}
-      body{background:#f5efe2;color:#302b22}.report-head,.source-record{border:0;border-radius:0;background:transparent;padding-inline:0}.source-record{border-block-start:1px solid #d9cfbb}.card,.panel,.review-case-card,.evaluation-item,.flow-item,.profile-item,.standard-detail-card,.evidence-box{border:0;border-radius:0;box-shadow:none;background:transparent;border-block-start:1px solid #d9cfbb}.panel-title,h2,h3,.report-head h1,.source-record h2{color:#343c26}.review-rewrite-text{white-space:pre-wrap;overflow-wrap:anywhere}.profile-heading-meta{display:flex;gap:1em;margin:.3em 0;color:#4d5842}.review-content-focus{border-inline-start:2px solid #aab69a;padding-inline-start:.8em;margin-block:1em}.review-content-focus strong{display:block;color:#394525}.review-key-highlight{color:inherit;background:#e4ebd7;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:0 .06em}.review-edit-highlight{color:inherit;background:#ffec98;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:0 .08em}@media print{.review-edit-highlight{print-color-adjust:exact;-webkit-print-color-adjust:exact;text-decoration:underline}}</style></head><body><main><header class="report-head"><h1>라이언의 기록 분석 ${APP_VERSION}</h1><p>${escapeHtml(AREA[lastResult.area].label)}, ${escapeHtml(LEVEL_POLICY[selectedLevel].label)} 기준, ${stamp}</p></header><section class="source-record"><h2>입력 기록</h2><p>${sourceText}</p></section>${clone.innerHTML}</main></body></html>`;
+      body{background:#f5efe2;color:#302b22}.report-head,.source-record{border:0;border-radius:0;background:transparent;padding-inline:0}.source-record{border-block-start:1px solid #d9cfbb}.card,.panel,.review-case-card,.evaluation-item,.flow-item,.profile-item,.standard-detail-card,.evidence-box{border:0;border-radius:0;box-shadow:none;background:transparent;border-block-start:1px solid #d9cfbb}.panel-title,h2,h3,.report-head h1,.source-record h2{color:#343c26}.review-rewrite-text,.review-annotated-text{white-space:pre-wrap;overflow-wrap:anywhere}#reviewAnnotatedDraft:not([hidden]){border-top:1px solid #d9cfbb;padding-top:1em;margin-top:1.2em}.review-inline-suggestion{color:#24484a;background:#e0efeb;font-weight:600;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:0 .1em}.review-annotation-note{color:#5f5547;font-size:.9em}.profile-heading-meta{display:flex;gap:1em;margin:.3em 0;color:#4d5842}.review-content-focus{border-inline-start:2px solid #aab69a;padding-inline-start:.8em;margin-block:1em}.review-content-focus strong{display:block;color:#394525}.review-key-highlight{color:inherit;background:#e4ebd7;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:0 .06em}.review-edit-highlight{color:inherit;background:#ffec98;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding:0 .08em}@media print{.review-edit-highlight{print-color-adjust:exact;-webkit-print-color-adjust:exact;text-decoration:underline}}</style></head><body><main><header class="report-head"><h1>라이언의 기록 분석 ${APP_VERSION}</h1><p>${escapeHtml(AREA[lastResult.area].label)}, ${escapeHtml(LEVEL_POLICY[selectedLevel].label)} 기준, ${stamp}</p></header><section class="source-record"><h2>입력 기록</h2><p>${sourceText}</p></section>${clone.innerHTML}</main></body></html>`;
       const blob = new Blob([report], { type: "text/html;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");

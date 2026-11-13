@@ -10,6 +10,7 @@
     --review-line: #ded4c0;
     --review-control-line: #8b7c65;
     --review-radius: 18px;
+    --review-inset: clamp(16px, 4vw, 38px);
     color-scheme: light !important;
     background: var(--review-page) !important;
     min-width: 0 !important;
@@ -123,10 +124,10 @@
     min-height: 0 !important;
     padding: 10px 14px 9px !important;
     margin: 0 0 16px !important;
-    border: 1px solid var(--review-line) !important;
-    border-radius: var(--review-radius) !important;
+    border: 0 !important;
+    border-radius: 14px !important;
     background: var(--review-sheet) !important;
-    box-shadow: 0 12px 32px rgba(65, 52, 30, .09) !important;
+    box-shadow: 0 6px 20px rgba(65, 52, 30, .08) !important;
     backdrop-filter: none !important;
   }
 
@@ -144,9 +145,9 @@
     height: clamp(36px, 4vw, 48px) !important;
     flex: none;
     display: block !important;
-    border: 1px solid #c3ad86 !important;
-    border-radius: 13px !important;
-    box-shadow: 0 3px 8px rgba(79, 55, 26, .17) !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    box-shadow: none !important;
     object-fit: cover;
   }
 
@@ -172,11 +173,10 @@
     display: flex !important;
     gap: 2px !important;
     margin: 0 !important;
-    padding: 3px !important;
+    padding: 0 !important;
     width: auto !important;
-    border: 1px solid var(--review-line) !important;
-    border-radius: 10px !important;
-    background: var(--review-canvas) !important;
+    border: 0 !important;
+    background: transparent !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
     position: static !important;
@@ -201,6 +201,12 @@
     background: var(--review-tint) !important;
   }
 
+  .topbar .topbar-actions :is(.back-home-button, .version-switch-button) {
+    border-color: transparent !important;
+    background: transparent !important;
+    color: var(--review-muted) !important;
+  }
+
   .review-mobile-nav {
     display: none !important;
   }
@@ -218,7 +224,7 @@
 
   #inputPanel {
     display: grid !important;
-    gap: 14px;
+    gap: 0;
     min-width: 0;
   }
 
@@ -228,6 +234,18 @@
 
   #resultPanel {
     min-width: 0;
+  }
+
+  :is(#inputPanel, #results.show, #guidePanel, #resultEmpty) {
+    border: 0 !important;
+    border-radius: var(--review-radius) !important;
+    background: var(--review-paper) !important;
+    box-shadow: 0 8px 28px rgba(65, 52, 30, .10) !important;
+  }
+
+  #results.show {
+    padding: var(--review-inset) !important;
+    margin: 0 !important;
   }
 
   :is(.global-tools, .card, .panel, .usage-card, .result-shell, dialog.subject-dialog) {
@@ -240,14 +258,17 @@
     -webkit-backdrop-filter: none !important;
   }
 
-  .global-tools {
+  #inputPanel > .global-tools {
     display: block !important;
     min-width: 0;
     margin: 0 !important;
-    padding: 13px clamp(14px, 3vw, 28px) !important;
+    padding: 17px var(--review-inset) 14px !important;
     align-self: start;
     position: static !important;
-    background: var(--review-paper) !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--review-line) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
   }
 
   .global-tools .global-tool-group {
@@ -271,8 +292,11 @@
   .global-tools .level-buttons.triple-mode {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px !important;
+    gap: 4px !important;
     width: 100% !important;
+    padding: 3px !important;
+    border-radius: 12px;
+    background: var(--review-sheet);
   }
 
   .global-tools .level-guide {
@@ -285,17 +309,33 @@
     text-align: center;
   }
 
-  .global-tools .level-buttons :is(.level-button, .duel-button) {
+  #inputPanel .global-tools .level-buttons :is(.level-button, .duel-button) {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 7px !important;
-    min-height: 49px !important;
+    min-height: 42px !important;
     height: auto !important;
     width: 100%;
     padding: 8px 11px !important;
     text-align: start !important;
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+
+  #inputPanel .global-tools .level-buttons :is(.level-button, .duel-button):hover:not(:disabled):not([aria-pressed="true"]) {
+    border-color: transparent !important;
+    background: var(--review-tint) !important;
+  }
+
+  #inputPanel .global-tools .level-buttons :is(.level-button, .duel-button)[aria-pressed="true"] {
+    color: #fff !important;
+    background: var(--review-accent) !important;
+  }
+
+  html body #inputPanel .global-tools .level-buttons :is(.level-button, .duel-button)[aria-pressed="true"]:focus-visible {
+    outline-color: #fffdf7 !important;
   }
 
   .duel-button-copy {
@@ -406,11 +446,14 @@
     outline-color: #fffdf7 !important;
   }
 
-  .setup-card {
+  #inputPanel > .setup-card {
     min-width: 0 !important;
     margin: 0 !important;
-    padding: clamp(16px, 3.2vw, 30px) !important;
-    box-shadow: 0 12px 32px rgba(65, 52, 30, .09) !important;
+    padding: 20px var(--review-inset) var(--review-inset) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 
   .setup-card > .section {
@@ -452,11 +495,11 @@
     place-items: center;
     width: 26px !important;
     height: 26px !important;
-    color: var(--review-deep) !important;
-    background: var(--review-tint) !important;
+    color: var(--review-accent) !important;
+    background: transparent !important;
     border: 0 !important;
-    border-radius: 7px !important;
-    font-size: .78rem !important;
+    border-radius: 0 !important;
+    font-size: .82rem !important;
     font-weight: 760 !important;
     margin: 0 !important;
   }
@@ -504,6 +547,25 @@
   .choice {
     padding: 8px 6px !important;
     white-space: normal !important;
+  }
+
+  #analysisPanel :is(.area-buttons, .target-buttons) .choice {
+    border-color: transparent !important;
+    background: var(--review-sheet) !important;
+  }
+
+  #analysisPanel :is(.area-buttons, .target-buttons) .choice:hover:not(:disabled):not([aria-pressed="true"]) {
+    background: var(--review-tint) !important;
+  }
+
+  #analysisPanel :is(.area-buttons, .target-buttons) .choice[aria-pressed="true"] {
+    border-color: transparent !important;
+    background: var(--review-accent) !important;
+    color: #fff !important;
+  }
+
+  html body #analysisPanel :is(.area-buttons, .target-buttons) .choice[aria-pressed="true"]:focus-visible {
+    outline-color: #fffdf7 !important;
   }
 
   :is(textarea, input, select) {
@@ -628,12 +690,10 @@
     color: var(--review-ink) !important;
     font-size: clamp(1.3rem, 2.8vw, 1.6rem) !important;
     letter-spacing: -.03em;
-    width: fit-content;
-    max-width: 100%;
-    margin: 0 auto 12px !important;
-    padding: 6px 12px;
-    border-radius: 8px;
-    background: var(--review-sheet) !important;
+    margin: 0 0 16px !important;
+    padding: 0;
+    text-align: center;
+    background: transparent !important;
     text-shadow: none !important;
   }
 
@@ -659,9 +719,43 @@
     color: var(--review-ink) !important;
   }
 
-  #results :is(#precisionReviewPanel, #duelPanel, .review-card, #retakeExamplePanel) {
-    padding: clamp(16px, 3vw, 26px) !important;
-    box-shadow: 0 12px 32px rgba(65, 52, 30, .09) !important;
+  #results :is(#precisionReviewPanel, #duelPanel, .review-card, #retakeExamplePanel, #v25MoreAnalysis,
+      .score-card, .panel) {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  #results :is(.result-grid, .retake-guide-grid) {
+    column-gap: 22px !important;
+  }
+
+  #results .review-case-grid {
+    gap: 0 22px !important;
+  }
+
+  #results .review-card {
+    margin-top: 18px !important;
+    padding-top: 16px !important;
+    border-top: 1px solid var(--review-line) !important;
+  }
+
+  #results :is(#retakeExamplePanel, #v25MoreAnalysis) {
+    margin: 10px 0 0 !important;
+    border-top: 1px solid var(--review-line) !important;
+  }
+
+  #results :is(#retakeExamplePanel, #v25MoreAnalysis) > summary {
+    padding: 10px 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  #results :is(.retake-example-content, .v25-more-analysis-content) {
+    padding: 0 !important;
   }
 
   #results :is(.self-review-grade, .self-review-rationale, .self-review-box, .evaluation-item,
@@ -669,25 +763,25 @@
       .duel-analysis-box, .duel-total-card, .duel-quote, .duel-note, .retake-stage-list li,
       .retake-guide-box, .review-summary-block, .flow-item, .profile-item, .priority-box) {
     color: var(--review-ink) !important;
-    background: var(--review-paper) !important;
-    border: 1px solid var(--review-line) !important;
-    border-radius: 10px !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
   }
 
   #results :is(.self-review-grade, .self-review-evidence, .duel-total-card, .retake-virtual,
       .retake-stage-list li > span, .retake-guide-box li mark) {
-    background: var(--review-tint) !important;
     color: var(--review-deep) !important;
-    border-color: var(--review-tint-line) !important;
     text-shadow: none !important;
   }
 
   #results .self-review-summary {
-    gap: 10px !important;
+    gap: 16px !important;
     grid-template-columns: minmax(124px, .25fr) minmax(0, 1fr) !important;
-    margin-bottom: 12px !important;
+    margin: 10px 0 12px !important;
+    padding: 4px 0 10px;
+    border-bottom: 1px solid var(--review-line);
   }
 
   #results .self-review-grade {
@@ -704,18 +798,19 @@
 
   #results .self-review-rationale {
     align-content: center;
-    background: var(--review-sheet) !important;
-    border-color: var(--review-line) !important;
-    padding: 12px 15px !important;
+    padding: 7px 0 !important;
   }
 
   #results .self-review-grid {
-    gap: 10px !important;
+    gap: 0 22px !important;
   }
 
   #results :is(.self-review-box, .review-case-card, .duel-analysis-box, .retake-guide-box) {
-    padding: 12px 14px !important;
-    box-shadow: inset 0 2px var(--review-line) !important;
+    padding: 10px 0 !important;
+  }
+
+  #results :is(.review-case-card, .retake-guide-box, .evaluation-item, .standard-detail-card, .flow-item, .profile-item) {
+    border-top: 1px solid var(--review-line) !important;
   }
 
   #results :is(.self-review-box, .review-case-card, .duel-analysis-box, .retake-guide-box) h3 {
@@ -733,7 +828,7 @@
     gap: 4px;
     padding: 10px 13px !important;
     border-inline-start: 3px solid var(--review-accent) !important;
-    background: var(--review-sheet) !important;
+    background: transparent !important;
   }
 
   #duelPanel .v22-duel-head {
@@ -754,21 +849,26 @@
   }
 
   #duelPanel :is(.duel-profile-grid, .duel-metric-grid, .duel-analysis-columns) {
-    gap: 10px !important;
+    gap: 8px 24px !important;
+  }
+
+  #duelPanel .duel-total-card {
+    padding: 0 0 14px !important;
+    border-bottom: 1px solid var(--review-line) !important;
   }
 
   #duelPanel .duel-metric-card {
     min-height: 0 !important;
     align-content: start;
-    padding: 12px 14px !important;
+    padding: 8px 0 14px !important;
+    border-bottom: 1px solid var(--review-line) !important;
   }
 
   #duelPanel :is(.duel-note, .duel-priority):not([hidden]) {
     display: grid;
     gap: 3px;
-    background: var(--review-tint) !important;
-    border-color: var(--review-tint-line) !important;
-    padding: 10px 13px !important;
+    background: transparent !important;
+    padding: 10px 0 !important;
     font-size: max(.89rem, 14px) !important;
   }
 
@@ -783,17 +883,17 @@
 
   #duelPanel .duel-comparison-details summary {
     min-height: 42px;
-    padding: 9px 12px;
-    border: 1px solid var(--review-control-line);
-    border-radius: 8px;
-    background: var(--review-sheet);
+    padding: 9px 0;
+    border: 0;
+    border-top: 1px solid var(--review-line);
+    background: transparent;
     color: var(--review-deep) !important;
     cursor: pointer;
     font-weight: 700;
   }
 
   #duelPanel .duel-comparison-details[open] .duel-profile-grid {
-    margin: 10px 0 0;
+    margin: 4px 0 0;
   }
 
   #duelPanel :is(.duel-metric-copy, .duel-total-number, .duel-profile-head) span,
@@ -814,15 +914,16 @@
 
   #guidePanel :is(.v25-guide-steps li, .threshold-cards > div, .usage-context-flow > span,
       .abc-calibration-note, .usage-change-table th) {
-    background: var(--review-tint) !important;
-    border-color: var(--review-line) !important;
+    background: transparent !important;
+    border: 0 !important;
     color: var(--review-deep) !important;
     box-shadow: none !important;
   }
 
-  #guidePanel .usage-change-table td {
-    background: var(--review-paper) !important;
-    border-color: var(--review-line) !important;
+  #guidePanel .usage-change-table :is(th, td) {
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--review-line) !important;
   }
 
   .launcher-action, #results summary, #results summary::after, #precisionConfidence,
@@ -841,8 +942,8 @@
   }
 
   .duel-metric-icon {
-    border-color: var(--review-tint-line) !important;
-    background: var(--review-tint) !important;
+    border: 0 !important;
+    background: transparent !important;
     color: var(--review-deep) !important;
   }
 
@@ -870,29 +971,99 @@
     overflow-wrap: anywhere;
     user-select: text;
     color: var(--review-ink);
-    background: var(--review-sheet) !important;
-    border-inline-start: 3px solid var(--review-accent);
-    border-radius: 4px 8px 8px 4px;
-    padding: 12px 14px;
+    background: transparent !important;
+    padding: 4px 0;
+  }
+
+  #retakeExampleText .review-rewrite-text mark.review-edit-highlight {
+    padding-inline: .03em;
+    background: linear-gradient(transparent 23%, #f4dfa0 23%, #f4dfa0 91%, transparent 91%);
+    color: #362510;
+    text-decoration: none;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  #results mark.review-key-highlight {
+    display: inline;
+    padding-inline: .03em;
+    background: linear-gradient(transparent 23%, #e1e8d7 23%, #e1e8d7 94%, transparent 94%) !important;
+    color: #293720 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  #results .profile-heading-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+    margin: 4px 0 0;
+    color: var(--review-muted) !important;
+    font-size: .9rem;
+  }
+
+  #results #profileSelectedTrack {
+    color: var(--review-muted) !important;
+  }
+
+  #results #profileTrackGrade {
+    color: var(--review-deep) !important;
+    font-weight: 800;
+  }
+
+  #results #retakePlacementGuide mark:not(.review-key-highlight) {
+    display: block;
+    margin: 2px 0;
+    padding: 1px 0 1px 9px !important;
+    border: 0 !important;
+    border-inline-start: 2px solid var(--review-tint-line) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--review-muted) !important;
+  }
+
+  #results #retakePlacementGuide li :is(span, b) {
+    color: var(--review-ink) !important;
+  }
+
+  #results #retakeSourceAnchors li::before {
+    background: var(--review-accent) !important;
+  }
+
+  #retakeExampleText .review-change-list .review-change-pair {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 2px 18px;
+    margin-block: 2px;
   }
 
   #guidePanel {
-    padding: clamp(16px, 3.6vw, 30px) !important;
-    box-shadow: 0 12px 32px rgba(65, 52, 30, .09) !important;
+    padding: var(--review-inset) !important;
   }
 
   #guidePanel .v25-guide-steps {
-    gap: 8px !important;
+    gap: 0 18px !important;
   }
 
   #guidePanel .v25-guide-steps li {
-    border-radius: 12px !important;
-    padding: 10px !important;
+    border-radius: 0 !important;
+    padding: 10px 0 !important;
   }
 
   #guidePanel .usage-card {
-    padding: clamp(12px, 2.5vw, 18px) !important;
-    background: var(--review-sheet) !important;
+    padding: 12px 0 !important;
+    border: 0 !important;
+    border-top: 1px solid var(--review-line) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  #guidePanel .threshold-cards > div {
+    padding: 8px 0 !important;
+    border-radius: 0 !important;
   }
 
   .app-shell > footer {
@@ -936,18 +1107,17 @@
 
     #analysisPanel, #inputPanel {
       grid-template-columns: minmax(0, 1fr);
-      gap: 12px;
     }
 
-    .global-tools {
-      padding: 13px !important;
+    #inputPanel > .global-tools {
+      padding: 13px var(--review-inset) !important;
     }
 
     .global-tools .level-buttons.triple-mode {
       grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 
-    .global-tools .level-buttons :is(.level-button, .duel-button),
+    #inputPanel .global-tools .level-buttons :is(.level-button, .duel-button),
     .duel-button-copy {
       flex-direction: column !important;
       align-items: center !important;
@@ -957,7 +1127,7 @@
       padding-inline: 3px !important;
     }
 
-    .global-tools .level-buttons :is(.level-button, .duel-button) {
+    #inputPanel .global-tools .level-buttons :is(.level-button, .duel-button) {
       font-size: .81rem !important;
     }
 
@@ -980,12 +1150,20 @@
       align-items: center;
       gap: 7px;
       text-align: left;
-      padding: 9px 11px !important;
+      padding: 7px 0 !important;
     }
 
     #results .self-review-grade small {
       justify-self: end;
       text-align: right;
+    }
+
+    #results .self-review-summary {
+      gap: 3px !important;
+    }
+
+    #results .self-review-box + .self-review-box {
+      border-top: 1px solid var(--review-line) !important;
     }
   }
 
@@ -1057,6 +1235,7 @@
 #guidePanel.usage-panel > .record-guide-grid {
   display: grid !important;
   margin-block-start: 14px;
+  column-gap: 20px !important;
 }
 
 #guidePanel .record-guide-grid :is(ul,ol) {
@@ -1070,9 +1249,9 @@
 #precisionReasoning:not([hidden]),
 #retakeExampleText .review-change-list {
   margin-block: 10px 15px;
-  padding: 10px 12px 10px 30px;
-  border-radius: 8px;
-  background: var(--review-sheet);
+  padding: 8px 0 8px 20px;
+  border-top: 1px solid var(--review-line);
+  background: transparent;
   color: var(--review-ink);
   overflow-wrap: anywhere;
 }
@@ -1080,6 +1259,30 @@
 #precisionReasoning > li + li,
 #retakeExampleText .review-change-list > li + li {
   margin-top: 6px;
+}
+
+#retakeExampleText .review-change-list > li > strong,
+#retakeExampleText .review-change-list > li > span {
+  display: block;
+}
+
+#retakeExampleText .review-change-pair b {
+  color: var(--review-deep);
+  margin-inline-end: .35em;
+}
+
+#reviewCompletionExample:not([hidden]) {
+  margin-block: 14px;
+  padding-block: 9px 3px;
+  border-top: 1px solid var(--review-line);
+}
+
+#reviewCompletionExample :is(h3, p) {
+  margin: 4px 0;
+}
+
+#reviewCompletionExample p strong {
+  margin-inline-end: .35em;
 }
 
 #retakePlacementGuide :is(.review-guidance-reason,.review-followup-question) {

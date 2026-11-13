@@ -1,7 +1,7 @@
 /* Ryan Record: evidence-based review. Runs locally in the browser; no I/O. */
 (function (root) {
   "use strict";
-  const VERSION = "v31-record-evidence@1";
+  const VERSION = "v32-record-evidence@1";
   const AREAS = {
     overall: { label:"전반 분석", start:"어떤 수업·관찰에서 어떤 질문이나 문제가 생겼는지", method:"학생이 선택한 기준·자료·방법", depth:"결과를 통해 무엇을 판단했고 그 근거가 무엇인지" },
     autonomy: { label:"자율활동", start:"학급이나 학교에서 어떤 필요를 발견했는지", method:"학생이 맡은 역할과 직접 제안하거나 조정한 방법", depth:"학생의 조치 뒤 학급 운영이나 구성원 참여가 어떻게 달라졌는지" },
@@ -82,6 +82,15 @@
   const normalize = value => value.normalize("NFC").replace(/\s+/g," ").trim();
   const has = (rx,text) => rx.test(text);
   const escape = value => textOf(value).replace(/[&<>"']/g,ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[ch]);
+  const keyHighlight = value => '<mark class="review-key-highlight">'+escape(value)+'</mark>';
+  function highlightSlots(value) {
+    let html = "", cursor = 0;
+    for (const part of value.matchAll(/\[[^\]\r\n]+\]/g)) {
+      html += escape(value.slice(cursor,part.index))+keyHighlight(part[0]);
+      cursor = part.index+part[0].length;
+    }
+    return html+escape(value.slice(cursor));
+  }
 
   function cleanPastedText(value) {
     // Copy from PDF/HWP often contains formatting-only breaks and spaces.
@@ -327,7 +336,7 @@
     const quote = byId("duelQuote");
     if (quote) {
       quote.hidden = !scan.result;
-      quote.innerHTML = scan.result ? '<strong>확인한 결과</strong><span class="duel-evidence-text">'+escape(scan.result)+'</span>' : "";
+      quote.innerHTML = scan.result ? '<strong>확인한 결과</strong><span class="duel-evidence-text">'+keyHighlight(scan.result)+'</span>' : "";
     }
     const note = byId("duelNote");
     const priority = scan.verifiedResult
@@ -337,7 +346,7 @@
         : "활동 이름 뒤에 학생이 직접 선택하거나 수행한 일부터 구체적으로 적어 주세요.";
     if (note) {
       note.hidden = !priority;
-      note.innerHTML = priority ? '<strong>먼저 보완할 부분</strong><span>'+escape(priority)+'</span>' : "";
+      note.innerHTML = priority ? '<strong>먼저 보완할 부분</strong><span>'+keyHighlight(priority)+'</span>' : "";
     }
   }
 
@@ -348,9 +357,7 @@
     return {span,start:item.start,end:item.start+span.length};
   }
 
-  function rewrite(original) {
-    const edits = [];
-    const safe = new Map([
+  const SAFE_WORDING = new Map([
       ["조사를 진행함","조사함"],["분석을 실시함","분석함"],["탐구를 진행함","탐구함"],
       ["발표를 진행함","발표함"],["실험을 진행함","실험함"],["토론을 진행함","토론함"],
       ["비교를 실시함","비교함"],["관찰을 실시함","관찰함"],
@@ -358,26 +365,119 @@
       ["설문 조사를 실시함","설문 조사함"],["내용을 정리하는 활동을 함","내용을 정리함"],
       ["의견을 나누는 활동을 함","의견을 나눔"],["발표를 실시함","발표함"],
       ["기사내용","기사 내용"],["추가조사","추가 조사"]
-    ]);
-    const patterns = new RegExp([...safe.keys()].sort((a,b) => b.length-a.length).join("|"),"g");
-    function revise(part) {
-      return part.replace(patterns,(before,offset,whole) => {
-        if (/\S/.test(whole.charAt(offset-1))) return before;
-        const tail = whole.slice(offset+before.length);
-        if (/함$/.test(before) && !/^(?:[\s.,;!?。！？]|$)/.test(tail)) return before;
-        if (!/함$/.test(before) && !/^(?:(?:은|는|이|가|을|를|에|으로|과|와|도|만)?(?:[\s.,;!?。！？]|$))/.test(tail)) return before;
-        const after = safe.get(before);
-        edits.push({before,after,reason:/함$/.test(before) ? "같은 행동을 뜻하는 표현을 짧게 다듬었습니다." : "단어를 띄어 써서 읽기 쉽게 했습니다."});
-        return after;
-      });
+  ]);
+  const WORDING_RX = new RegExp([...SAFE_WORDING.keys()].sort((a,b) => b.length-a.length).join("|"),"g");
+  const COMPLETED_VERB = "분석|비교|측정|관찰|조사|수집|분류|검토|검증|실험|제작|작성|발표|공유|기록|정리|설계|적용|계산|확인|설명|파악|도출|발견|조정|제안|안내|수정|보완";
+  const SEQUENCE_EDIT = new RegExp("(?:^|\\s)("+COMPLETED_VERB+")(하였으며|했으며|하였고|했고|하였으나|했으나|하였지만|했지만|하며|하고|하지만|하였음|했음|함)[ \\t]*,?[ \\t]+(?=(?:그\\s*결과|이를\\s*(?:바탕으로|통해|토대로)|이후|이어서|이에|따라서|그러나|다만|반면|(?:학생|교사|팀원|모둠|친구|상대)(?:은|는|이|가))\\s)","g");
+  const CONTRAST_EDIT = new RegExp("(?:^|\\s)("+COMPLETED_VERB+")(?:하였으나|했으나|하였지만|했지만|하지만),[ \\t]+(?=[가-힣])","g");
+  const MERGE_EDIT = /(?:^|\s)((?:[\p{L}\p{N}·-]{1,24}\s+){0,2}(?:비교표|기록표|분류표|발표\s*자료|결과표|보고서|발표문|설문지|안내문|요약표|포스터|표|그래프|모형))를 (작성|제작|정리)함[.。][ \t]+\2한 ([^.\r\n!?。！？]{1,48}?)를[ \t]+(?=[^.\r\n!?。！？]{0,45}(?:발표|제출|공유|게시|설명|배포)(?:함|하였음|했음)(?=[.。!?！？\s]|$))/gu;
+  const LABELED_ORDER_EDIT = /^(?:확인한\s*결과|관찰\s*결과|결과)[：:][ \t]+([^\r\n]+)(\r?\n)(?:수행\s*방법|탐구\s*방법|조사\s*방법|방법)[：:][ \t]+([^\r\n]+)/gm;
+  const NO_SPLIT_CONTEXT = /(?:않|못|아니|않을|해야|하려|예정|계획|수\s*있|수\s*없|가능|우려|필요|추정|가정|가설|혹은|또는|없이)/;
+  const REPORTING_SUFFIX = /(?:다고|라고|다는|라는|하도록).{0,28}(?:설명|진술|기록|언급|주장|보도|작성|가정|제안|발표|답변)(?:함|했|하였|됨|하였음|한|하는)|(?:다고|라는|다는).{0,25}(?:내용|자료|보도|기사).{0,18}(?:읽|듣|옮기|인용|요약)/;
+  const OUTSIDE_WRITER = /(?:^|\s)(?:동료|부모|형제|선배|후배|연구자|사서|진행자|멘토|대표|담당자|친구들|조원들|팀원들)(?:은|는|이|가)\s/;
+  const GENERIC_LINK = /^(?:학생|본인|활동|방법|과정|결과|수치|기준|자료|정리|설명|사례|의견|관찰|수행|확인|시간|조건|비교|측정|나타나|늘어난|줄어든|도출|검토)$/;
+  function sharedSubject(a,b) {
+    const content = value => new Set(contentTokens(value)
+      .map(word => word.replace(/(?:에서|으로|에게|부터|까지|에는|에도|[의이가은는을를에로와과도만])$/u,""))
+      .filter(word => /[A-Za-z가-힣]{2}/.test(word) && !GENERIC_LINK.test(word)));
+    const second = content(b);
+    return [...content(a)].filter(word => second.has(word)).length >= 2;
+  }
+
+  function rewrite(original) {
+    const edits = [];
+    const patches = [];
+    const safeQuotes = [...original.matchAll(QUOTE)].map(match => [match.index,match.index+match[0].length]);
+    const add = (at,end,after,reason,type) => {
+      if (safeQuotes.some(([start,stop]) => at < stop && end > start)
+        || patches.some(item => at < item.stop && end > item.at)) return;
+      patches.push({at,stop:end,after,reason,type});
+    };
+    for (const match of original.matchAll(LABELED_ORDER_EDIT)) {
+      const [,finding,line,method] = match;
+      if (!ACTION.test(method) || !DONE.test(method) || PLAN.test(method) || NEG.test(method) || !RESULT.test(finding)
+        || /^(?:이|그|앞선|위의|해당)\s/.test(method) || BOUNDARY.test(method) || BOUNDARY.test(finding)
+        || [method,finding].some(value => SOURCE_ACTOR.test(value) || OTHER_ACTOR.test(value) || BORROWED_WRAP.test(value))
+        || !sharedSubject(method,finding)) continue;
+      add(match.index,match.index+match[0].length,"수행 방법: "+method+line+"결과: "+finding,
+        "같은 활동에서 따로 적은 방법과 결과를 수행 순서대로 배치했습니다.","순서 정리");
     }
-    let text = "", at = 0;
-    for (const quote of original.matchAll(QUOTE)) {
-      text += revise(original.slice(at,quote.index)) + quote[0];
-      at = quote.index + quote[0].length;
+    for (const match of original.matchAll(MERGE_EDIT)) {
+      const [full,object,action,repeated] = match;
+      const noun = object.trim().split(/\s+/).at(-1);
+      if (repeated.trim() !== object.trim() && repeated.trim() !== noun) continue;
+      const contextBefore = original.slice(Math.max(0,match.index-160),match.index).split(/(?:[.!?。！？]\s+|\r?\n)/u).at(-1) || "";
+      const sourceSentence = contextBefore+full;
+      const next = original.slice(match.index+full.length).split(/[.\r\n!?。！？]/,1)[0];
+      const boundary = match.index+full.length+next.length;
+      if (safeQuotes.some(([start,stop]) => start < boundary && stop > match.index)
+        || [sourceSentence,next].some(value => OTHER_ACTOR.test(value) || SOURCE_ACTOR.test(value) || OUTSIDE_WRITER.test(value))
+        || EXPLICIT_STUDENT.test(next)
+        || PLAN.test(next) || NEG.test(next) || BOUNDARY.test(next.trim())) continue;
+      const at = match.index+full.indexOf(action+"함",object.length);
+      if (at < match.index) continue;
+      add(at,match.index+full.length,action+"하고 ",
+        "앞 문장에서 만든 결과물을 다시 언급한 부분을 줄이고, 이어서 한 일을 연결했습니다.","문장 연결");
     }
-    text += revise(original.slice(at));
-    return {plain:text,edits};
+    const embedded = (from,to) => {
+      const tail = original.slice(to);
+      const next = exactSentences(tail)[0] || tail;
+      const prior = original.slice(Math.max(0,from-180),from).split(/(?:[.!?。！？]\s+|\r?\n)/u).at(-1) || "";
+      return REPORTING_SUFFIX.test(next) || Boolean((SOURCE_ACTOR.test(prior) || OTHER_ACTOR.test(prior))
+        && /(?:라고|다고|한\s*(?:자료|기사|설명|내용)|읽음|들음|소개함|인용함)/.test(next));
+    };
+    for (const match of original.matchAll(SEQUENCE_EDIT)) {
+      const [full,action,ending] = match;
+      const at = match.index+full.indexOf(action);
+      const tail = original.slice(match.index+full.length);
+      if (!full.includes(",") && /^(?:학생|교사|팀원|모둠|친구|상대)(?:은|는|이|가)\s/.test(tail)) continue;
+      const next = tail.split(/[.\r\n!?。！？]/,1)[0];
+      if (embedded(at,match.index+full.length) || /^(?:하고|하며|하지만)$/.test(ending)
+        && (!DONE.test(next) || NO_SPLIT_CONTEXT.test(next))) continue;
+      if (/(?:으나|지만)/.test(full) && !/^(?:그러나|다만|반면)\s/.test(tail)) continue;
+      add(at,match.index+full.length,action+"함. ",
+        "학생의 수행과 그 뒤의 결과나 다른 사람의 행동을 별도 문장으로 나눴습니다.","문장 나누기");
+    }
+    for (const match of original.matchAll(CONTRAST_EDIT)) {
+      const [full,action] = match;
+      const at = match.index+full.indexOf(action);
+      const tail = original.slice(match.index+full.length);
+      if (/^(?:그러나|다만|반면)\s/.test(tail) || embedded(at,match.index+full.length)) continue;
+      add(at,match.index+full.length,action+"함. 다만 ",
+        "관찰이나 판단과 그에 대한 예외를 별도 문장으로 나눴습니다.","문장 나누기");
+    }
+    for (const match of original.matchAll(WORDING_RX)) {
+        const before = match[0];
+        const offset = match.index;
+        if (/\S/.test(original.charAt(offset-1))) continue;
+        const tail = original.slice(offset+before.length);
+        if (/함$/.test(before) && !/^(?:[\s.,;!?。！？]|$)/.test(tail)) continue;
+        if (!/함$/.test(before) && !/^(?:(?:은|는|이|가|을|를|에|으로|과|와|도|만)?(?:[\s.,;!?。！？]|$))/.test(tail)) continue;
+        add(offset,offset+before.length,SAFE_WORDING.get(before),
+          /함$/.test(before) ? "같은 행동을 뜻하는 표현을 짧게 다듬었습니다." : "단어를 띄어 써서 읽기 쉽게 했습니다.","표현 정리");
+    }
+    let plain = "", from = 0;
+    for (const patch of patches.sort((a,b) => a.at-b.at)) {
+      plain += original.slice(from,patch.at);
+      const start = plain.length;
+      plain += patch.after;
+      const end = plain.trimEnd().length;
+      edits.push({before:original.slice(patch.at,patch.stop).trimEnd(),after:plain.slice(start,end),start,end,reason:patch.reason,type:patch.type});
+      from = patch.stop;
+    }
+    plain += original.slice(from);
+    return {plain,edits};
+  }
+
+  function highlightedRevision(revision) {
+    let at = 0;
+    let html = "";
+    for (const {start,end} of revision.edits) {
+      html += escape(revision.plain.slice(at,start))
+        + '<mark class="review-edit-highlight">'+escape(revision.plain.slice(start,end))+'</mark>';
+      at = end;
+    }
+    return html + escape(revision.plain.slice(at));
   }
 
   function assess(payload = {}) {
@@ -526,27 +626,38 @@
     const body = byId("retakeExampleText");
     const guide = byId("retakePlacementGuide");
     const source = byId("retakeSourceAnchors");
-    if (body) body.innerHTML = '<h3>사실을 보존한 수정안</h3><p class="review-rewrite-text">'+escape(revision.plain)+'</p>'
-      + (revision.edits.length ? '<ul class="review-change-list">'+revision.edits.map(edit => '<li><strong>수정 전</strong> “'+escape(edit.before)+'” <strong>수정 후</strong> “'+escape(edit.after)+'”<br>'+escape(edit.reason)+'</li>').join("")+'</ul>' : '');
+    if (body) body.innerHTML = '<h3>원문을 바탕으로 고친 문장</h3><p class="review-rewrite-text">'+highlightedRevision(revision)+'</p>'
+      + (revision.edits.length ? '<ul class="review-change-list">'+revision.edits.map(edit =>
+        '<li><strong>'+escape(edit.type)+'</strong><span class="review-change-pair"><span><b>수정 전</b> “'+escape(edit.before)
+        +'”</span><span><b>수정 후</b> “'+escape(edit.after)+'”</span></span><span>'+escape(edit.reason)+'</span></li>').join("")+'</ul>' : '');
+    const sample = byId("reviewCompletionExample");
+    if (sample) {
+      const candidate = guidance.find(item => item.anchor && ["result","depth","role","course"].includes(item.key));
+      sample.hidden = !candidate;
+      sample.innerHTML = candidate ? '<h3>확인한 사실을 덧붙이는 예시</h3><p><strong>이어 쓸 원문</strong> '+escape(candidate.anchor.span)
+        +'</p><p><strong>덧붙일 문장</strong> '+highlightSlots(candidate.example)+'</p>' : '';
+    }
     if (guide) guide.innerHTML = guidance.length ? guidance.map(item => '<li><strong>'+escape(item.title)+'</strong>'
       + (item.anchor ? '<mark>원문 “'+escape(item.anchor.span)+'”</mark>' : '')
       + '<span><b>보완할 위치</b> '+escape(item.position)+'</span><span class="review-guidance-reason"><b>보완하는 이유</b> '+escape(item.reason)+'</span>'
-      + '<span><b>수정 방향</b> '+escape(item.what)+'</span><span class="review-followup-question"><b>확인할 사실</b> '+escape(item.question)+'</span>'
+      + '<span><b>수정 방향</b> '+escape(item.what)+'</span><span class="review-followup-question"><b>확인할 사실</b> '+(item === guidance[0] ? keyHighlight(item.question) : escape(item.question))+'</span>'
       + '<em><b>작성 틀</b> '+escape(item.example)+'</em></li>').join("")
       : '<li>현재 구조를 유지하고, 실제 관찰한 사실과 일치하는지만 확인하세요.</li>';
     if (source) source.innerHTML = anchors.length ? anchors.map(item => '<li>“'+escape(item.span)+'”</li>').join("") : '<li>연결할 원문 근거를 확인하지 못했습니다.</li>';
     const warning = byId("retakeWarningText");
     if (warning) warning.textContent = "대괄호가 있는 문장은 작성 틀입니다. 확인할 사실을 채우기 전에는 기록에 넣지 마세요.";
     const status = byId("retakeStatus");
-    if (status) status.textContent = revision.edits.length ? "표현을 "+revision.edits.length+"곳 다듬었습니다." : "자동으로 바꾼 표현은 없습니다.";
+    if (status) status.textContent = revision.edits.length ? "형광펜으로 표시한 "+revision.edits.length+"곳을 다듬었습니다." : "자동으로 바꾼 표현은 없습니다.";
     panel.dataset.ready = "true";
   }
 
   function render(canonical, doc) {
     const byId = id => doc.getElementById(id);
     const put = (id,value) => { const el = byId(id); if (el) el.textContent = value; };
-    const list = values => values.map(item => '<li>'+escape(item)+'</li>').join("");
-    const writeList = (id,values) => { const el = byId(id); if (el) el.innerHTML = list(values); };
+    const writeList = (id,values,highlightFirst = false) => {
+      const el = byId(id);
+      if (el) el.innerHTML = values.map((item,i) => '<li>'+(highlightFirst && i === 0 ? keyHighlight(item) : escape(item))+'</li>').join("");
+    };
     const grade = canonical.displayGrade;
     const scoreText = "기록 근거 충족도 "+canonical.score+"%";
     const strictMode = grade === canonical.strictGrade;
@@ -569,12 +680,12 @@
     put("resultStatus",grade+" 판정, "+scoreText);
     writeList("precisionStrengths",canonical.strengths);
     writeList("precisionWeaknesses",canonical.weaknesses);
-    writeList("precisionSuggestions",canonical.suggestions);
+    writeList("precisionSuggestions",canonical.suggestions,canonical.guidance.length > 0);
     writeList("priorityList",canonical.suggestions);
     const evidenceBox = byId("precisionEvidence");
     if (evidenceBox) {
-      const quotes = canonical.evidence.slice(0,2).map(e => "“"+e.span+"”");
-      evidenceBox.innerHTML = "<strong>원문에서 확인한 근거</strong><span>"+escape(quotes.join(" ") || "연결할 직접 근거가 부족합니다.")+"</span>";
+      const quotes = canonical.evidence.slice(0,2).map((e,i) => "“"+(i === 0 ? keyHighlight(e.span) : escape(e.span))+"”");
+      evidenceBox.innerHTML = "<strong>원문에서 확인한 근거</strong><span>"+(quotes.join(" ") || "연결할 직접 근거가 부족합니다.")+"</span>";
     }
     const bar = byId("scoreMeter");
     if (bar) {

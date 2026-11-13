@@ -54,7 +54,7 @@ if (server) await new Promise((resolveListen, rejectListen) => {
 const baseUrl = new URL(live ? "https://seiryu1318.github.io/Ryan_record/" : "http://127.0.0.1:" + server.address().port + "/");
 const siteUrl = route => new URL(route.replace(/^\//, ""), baseUrl);
 const allowedRequests = new Set([...staticFiles.keys(), "/favicon.ico",
-  "/record-review.css?v=31", "/record-review.js?v=31"].map(route => siteUrl(route).href));
+  "/record-review.css?v=32", "/record-review.js?v=32"].map(route => siteUrl(route).href));
 
 const inquiry = "수온에 따라 효모 발효 속도가 달라지는 이유를 질문함. 교과서의 효소 단원을 참고해 온도만 다르게 설정하고 같은 양의 효모에서 발생한 기체 부피를 세 차례 측정함. 측정값을 표로 비교하여 수온이 높은 조건에서 기체 부피가 더 큰 이유를 효소 활성과 연결해 해석함. 첫 측정에서 온도계 위치가 달라 오차가 생긴 한계를 확인하고 센서 위치를 통일해 재측정하여 편차가 줄어든 결과를 표에 표시함.";
 const action = "교내 기후 활동에서 자료 정리 역할을 맡아 기상 관측 자료 두 종류를 날짜별로 정리하고 표로 작성함. 완성한 표를 모둠 발표 자료로 제출함.";
@@ -67,8 +67,23 @@ const behaviorOutcome = "교내 모둠 활동에서 말하지 못하는 친구�
 const behaviorFollowUp = behaviorOutcome + " 다음 모둠 회의에서도 의견을 먼저 묻고 역할을 조정함. 이후 그 친구가 맡은 자료를 직접 설명하고 모둠원 전원이 발표에 참여함.";
 const inquiryAndFuture = "교실 환기에 따라 미세먼지 값이 달라지는 이유를 질문함. 창문을 열기 전과 후의 먼지 농도를 3회 측정해 표로 정리함. 환기 후 농도가 낮아진 결과를 근거로 교실의 공기 흐름이 달라졌다고 해석함. 다음에는 측정 기간을 늘릴 계획임.";
 const disjoint = "급식 잔반의 양을 3일간 측정하고 측정값을 표로 정리함. 별개의 활동으로 소설 주인공의 판단을 시대적 배경과 연결해 해석함.";
-const rewriteInput = "2025년 6월 14일, 생명과학 활동에서 pH 7.4 조건의 E. coli 배양 결과를 조사함. 배양 과정의 원인 조사를 진행함. 메모 제목 ‘조사를 진행함’을 인용해 집락 지름 24mm를 표로 작성함.";
-const rewriteExpected = rewriteInput.replace("조사를 진행함", "조사함");
+const rewriteInput = "2025년 6월 14일, 생명과학 활동에서 pH 7.4 조건의 E. coli 배양 결과를 조사함. 배양 과정의 원인 조사를 진행함. 메모 제목 ‘조사를 진행함’을 인용해 집락 지름 24mm를 표로 작성함. 다른 조건에서도 관찰을 실시함.";
+const firstRewrite = rewriteInput.replace("조사를 진행함", "조사함");
+const rewriteExpected = firstRewrite.replace("관찰을 실시함", "관찰함");
+const rewriteHighlights = [
+  { text: "조사함", start: rewriteInput.indexOf("조사를 진행함") },
+  { text: "관찰함", start: firstRewrite.indexOf("관찰을 실시함") },
+];
+const joinedInput = "같은 조건에서 E. coli 집락 지름을 3회 측정해 비교표를 작성함. 작성한 비교표를 모둠 회의에서 발표함.";
+const joinedExpected = "같은 조건에서 E. coli 집락 지름을 3회 측정해 비교표를 작성하고 모둠 회의에서 발표함.";
+const outOfOrderInput = "결과: 집락 지름이 3.0mm에서 4.5mm로 늘어난 것을 확인함.\n방법: 같은 온도에서 집락 지름을 3회 측정함.";
+const reorderedExpected = "수행 방법: 같은 온도에서 집락 지름을 3회 측정함.\n결과: 집락 지름이 3.0mm에서 4.5mm로 늘어난 것을 확인함.";
+const mixedActorRewrite = "학생은 보고서를 작성함. 작성한 보고서를 교사가 검토하고 발표함.";
+const sequenceInput = "용액의 pH 7.4 조건에서 E. coli 집락을 3회 측정하였으며, 그 결과 평균 지름 24mm를 기록함.";
+const sequenceExpected = sequenceInput.replace("측정하였으며,", "측정함.");
+const unrelatedRewrite = "결과: 국어 발표에 참여함.\n방법: 미세먼지 농도를 3회 측정함.";
+const borrowedRewrite = "결과: 저자가 실험에서 차이가 나타난 것을 설명함.\n방법: 학생은 논문을 읽고 자료를 분류함.";
+
 const scannerFixtures = {
   quoted: "수업 자료에 실린 ‘하천의 오염 수치를 3회 측정해 감소 원인을 분석하고 보고서를 완성함.’이라는 문장을 읽고 소감을 적음.",
   title: "활동 안내문에서 『미세먼지 농도를 3회 측정하여 그래프로 작성함』이라는 보고서 제목을 보고 관심을 보임.",
@@ -318,6 +333,7 @@ async function assertDuelEvidence(page, label) {
   const weakNote = await note.innerText();
   assert.match(weakNote, /무엇|학생이|학생의|행동|결과|자료|확인|써|적/);
   assert.doesNotMatch(weakNote, /1차 결론 미확인|합격 가능성|대표 장면이 부족/);
+  assert.ok(await note.locator("mark.review-key-highlight").count() > 0, "duel action guidance is marked when evidence is missing");
 
   await analyze(page, gisResult, { duel: true });
   const duelText = await page.locator("#duelPanel").innerText();
@@ -326,12 +342,138 @@ async function assertDuelEvidence(page, label) {
   assert.equal(await cards.count(), 4, label + " four distinct duel dimensions");
   assert.equal(await quote.isVisible(), true, label + " verified result is visible");
   assert.match(await quote.locator(".duel-evidence-text").innerText(), /흡수량이 감소하는 사례를 발견/);
+  const duelMarks = await quote.locator("mark.review-key-highlight").allTextContents();
+  assert.ok(duelMarks.some(item => /흡수량이 감소하는 사례를 발견/.test(item) && gisResult.includes(item)), "duel result highlights exact evidence");
   await verifyQuotes(gisResult);
 
   await analyze(page, decimalDuel, { duel: true });
   await verifyQuotes(decimalDuel);
   const evidence = await page.locator("#duelQuote .duel-evidence-text:visible, #duelMetricGrid .duel-evidence-text:visible, #duelMetricGrid .duel-emphasis:visible").allTextContents();
   assert.ok(evidence.some(item => /E\. coli|3\.0mm|4\.5mm/.test(item)), "decimal or abbreviation appears intact in duel evidence");
+}
+
+async function assertLightweightSections(page, selectors, label) {
+  const enclosed = await page.evaluate(items => items.flatMap(selector => {
+    const elements = [...document.querySelectorAll(selector)].filter(element => element.getClientRects().length);
+    return elements.flatMap(element => {
+      const style = getComputedStyle(element);
+      const sides = ["Top", "Right", "Bottom", "Left"].filter(side =>
+        !["none", "hidden"].includes(style["border" + side + "Style"]) && parseFloat(style["border" + side + "Width"]) > 0);
+      return sides.length === 4 || style.boxShadow !== "none" ? [selector] : [];
+    });
+  }), selectors);
+  assert.deepEqual(enclosed, [], label + " sections do not use nested frames or shadows");
+}
+
+async function assertExactHighlight(page, source, expected, changes) {
+  const text = page.locator("#retakeExampleText .review-rewrite-text");
+  const ranges = await text.evaluate(element => {
+    return [...element.querySelectorAll("mark.review-edit-highlight")].map(mark => {
+      const before = document.createRange();
+      before.setStart(element, 0);
+      before.setEndBefore(mark);
+      return { text: mark.textContent, start: before.toString().length };
+    });
+  });
+  assert.equal(await text.textContent(), expected, "highlight does not change rewrite text or whitespace");
+  assert.deepEqual(ranges, changes, "only the replacement at its exact rewritten offset is marked");
+  for (const token of ["pH 7.4", "E. coli", "24mm", "‘조사를 진행함’"]) {
+    if (source.includes(token)) assert.ok(expected.includes(token), token + " stays intact");
+  }
+  assert.equal(await page.locator("#retakePlacementGuide .review-edit-highlight, .review-change-list .review-edit-highlight").count(), 0,
+    "original evidence and suggested fill-in material are not marked as edits");
+  if (changes.length) {
+    const selector = ".review-rewrite-text mark.review-edit-highlight";
+    await assertReadableContrast(page, [selector], "highlight");
+    const visibleColor = await page.locator(selector).first().evaluate(mark => {
+      const style = getComputedStyle(mark);
+      const parent = getComputedStyle(mark.parentElement);
+      const distinctFill = !["transparent", "rgba(0, 0, 0, 0)"].includes(style.backgroundColor)
+        && style.backgroundColor !== parent.backgroundColor;
+      return distinctFill || (style.backgroundImage !== "none" && style.backgroundImage !== parent.backgroundImage);
+    });
+    assert.equal(visibleColor, true, "the semantic highlight is visibly distinct");
+  }
+}
+
+async function assertTrackProfile(page, strict) {
+  const details = page.locator("#v25MoreAnalysis");
+  if (await details.getAttribute("open") === null) await details.locator("summary").click();
+  const title = page.locator("#profileTitle");
+  const track = page.locator("#profileSelectedTrack");
+  const grade = page.locator("#profileTrackGrade");
+  assert.equal(await title.innerText(), "희망 계열과의 관련성");
+  assert.equal(await track.isVisible(), true);
+  assert.equal(await grade.isVisible(), true);
+  assert.equal(await track.innerText(), "이공계열");
+  assert.match(await grade.innerText(), strict ? /^[ABC]$/ : /^(우수|미흡)$/);
+  assert.doesNotMatch(await title.innerText(), /,|이공계열|우수|미흡/);
+}
+
+async function assertKeyHighlight(page, source, revised) {
+  const key = page.locator("mark.review-key-highlight");
+  const evidence = await page.locator("#precisionEvidence").innerText();
+  const evidenceMarks = await page.locator("#precisionEvidence mark.review-key-highlight").allTextContents();
+  assert.ok(evidenceMarks.length > 0, "source evidence has a visible secondary mark");
+  for (const marked of evidenceMarks) {
+    const raw = marked.replace(/^“|”$/g, "").trim();
+    assert.ok(source.includes(raw) && evidence.includes(marked), "mark retains exact wording from the user's input");
+  }
+  assert.ok(await page.locator("#precisionSuggestions li:first-child mark.review-key-highlight").count() > 0, "the first useful suggestion is marked");
+  const suggestion = await page.locator("#precisionSuggestions li:first-child").innerText();
+  assert.equal(suggestion, revised.suggestions[0], "secondary marking does not change the suggestion");
+  const placeholders = await page.locator("#reviewCompletionExample mark.review-key-highlight").allTextContents();
+  assert.ok(placeholders.length > 0 && placeholders.every(text => /^\[[^\]]+\]$/.test(text)), "the completion draft highlights only fact placeholders");
+  const questions = await page.locator(".review-followup-question mark.review-key-highlight").allTextContents();
+  assert.ok(questions.length === 1 && questions[0].trim().length > 2, "the first meaningful follow-up question is marked");
+  assert.equal(await page.locator(".review-rewrite-text mark.review-key-highlight, .review-change-list mark.review-key-highlight").count(), 0,
+    "secondary highlights do not mix into the edited wording");
+  assert.equal(await key.first().isVisible(), true);
+  const styles = await page.evaluate(() => ["mark.review-key-highlight", "mark.review-edit-highlight"].map(selector => {
+    const style = getComputedStyle(document.querySelector(selector));
+    return [style.backgroundColor, style.backgroundImage];
+  }));
+  assert.notDeepEqual(styles[0], styles[1], "pale key and actual-edit highlights have different styling");
+  assert.ok(!["transparent", "rgba(0, 0, 0, 0)"].includes(styles[0][0]) || styles[0][1] !== "none", "key highlight has a visible pale fill");
+  await assertReadableContrast(page, ["#precisionEvidence mark.review-key-highlight"], "key highlight");
+}
+
+async function assertStructuralRewrite(page, example) {
+  const fixtures = [
+    { input: joinedInput, expected: joinedExpected, changes: [{ text: "작성하고", start: joinedExpected.indexOf("작성하고") }], kind: "문장 연결" },
+    { input: outOfOrderInput, expected: reorderedExpected, changes: [{ text: reorderedExpected, start: 0 }], kind: "순서 정리" },
+    { input: sequenceInput, expected: sequenceExpected, changes: [{ text: "측정함.", start: sequenceExpected.indexOf("측정함.") }], kind: "문장 나누기" },
+    ...[mixedActorRewrite, unrelatedRewrite, borrowedRewrite].map(input => ({ input, expected: input, changes: [] })),
+  ];
+  for (const {input, expected, changes, kind} of fixtures) {
+    await analyze(page, input);
+    if (await example.getAttribute("open") === null) await example.locator("summary").click();
+    await assertExactHighlight(page, input, expected, changes);
+    const editNotes = await page.locator(".review-change-list li").allTextContents();
+    if (kind) assert.ok(editNotes.some(note => note.includes(kind)), kind + " is explained as a structural edit");
+    else assert.equal(editNotes.length, 0, "unrelated scenes and different actors stay separate");
+  }
+}
+
+async function assertDownloadedHighlight(page, report, expected, changes) {
+  const parsed = await page.evaluate(reportText => {
+    const doc = new DOMParser().parseFromString(reportText, "text/html");
+    const rewrite = doc.querySelector(".review-rewrite-text");
+    return {
+      plain: rewrite?.textContent,
+      marks: [...doc.querySelectorAll(".review-rewrite-text mark.review-edit-highlight")].map(mark => mark.textContent),
+      source: doc.querySelector(".source-record")?.textContent,
+      sourceMarks: doc.querySelectorAll(".source-record mark.review-edit-highlight, .source-record mark.review-key-highlight").length,
+      keyMarks: doc.querySelectorAll("#precisionEvidence mark.review-key-highlight, #precisionSuggestions mark.review-key-highlight").length,
+      stylesheet: [...doc.querySelectorAll("style")].map(style => style.textContent).join("\n"),
+    };
+  }, report);
+  assert.equal(parsed.plain, expected, "download includes the unaltered rewritten text");
+  assert.deepEqual(parsed.marks, changes.map(change => change.text), "download preserves semantic marks");
+  assert.ok(parsed.source?.includes(rewriteInput) && parsed.sourceMarks === 0, "download keeps original text unmarked");
+  assert.match(parsed.stylesheet, /\.review-edit-highlight\s*\{[^}]*background/i, "download styles the semantic mark without site CSS");
+  assert.ok(parsed.keyMarks > 0, "download keeps key evidence and suggestion marks");
+  assert.match(parsed.stylesheet, /\.review-key-highlight\s*\{[^}]*background/i, "download styles pale marks without site CSS");
 }
 
 async function assertFitsViewport(page, label) {
@@ -459,9 +601,11 @@ async function openPage(browser, { route, mobile, device, label, reducedMotion =
   await page.waitForFunction(() => Boolean(document.getElementById("recordText")));
   await assertFitsViewport(page, label + " initial screen");
   if (!baseline) {
-    if (live) assert.match(await page.title(), mobile ? /ver\.24$/ : /ver\.31$/);
+    if (live) assert.match(await page.title(), mobile ? /ver\.25$/ : /ver\.32$/);
     await assertBrandAndBackground(page, label);
     await assertCenteredFlow(page, label + " initial screen");
+    await assertLightweightSections(page, [".global-tools", ".setup-card"], label + " input");
+    assert.ok(await page.locator("#recordText").evaluate(field => parseFloat(getComputedStyle(field).borderTopWidth) > 0), "text field keeps its visible boundary");
     await assertMotionPolicy(page, label + " initial screen");
   }
   return { context, page, attempts, errors };
@@ -546,6 +690,7 @@ async function runModeFlow(browser, options) {
       await assertMotionTriggered(page, "guide", "guidePanel");
       await assertMotionPolicy(page, label + " guide", "guide");
       await assertReadableContrast(page, [mobile ? "#reviewSectionSelect" : "#guideTab", "#guidePanel h2"], label + " guide");
+      await assertLightweightSections(page, ["#guidePanel .usage-card"], label + " guide");
     }
     await openReviewSection(page, "analysis");
     if (!baseline) await assertMotionPolicy(page, label + " return to analysis");
@@ -575,8 +720,10 @@ async function runModeFlow(browser, options) {
     const strong = await analyze(page, inquiry, { enter: !mobile });
     if (!baseline) {
       await assertCenteredFlow(page, label + " ordinary result", { results: true });
+      await assertLightweightSections(page, ["#precisionReviewPanel", ".self-review-box", ".self-review-rationale"], label + " ordinary result");
       await assertMotionPolicy(page, label + " ordinary result");
       await assertReadableContrast(page, ["#precisionGrade", "#precisionRationale"], label + " ordinary result");
+      await assertTrackProfile(page, true);
       assert.equal(await textarea.isVisible(), false, "records are not shown alongside results");
       await openReviewSection(page, "guide");
       assert.equal(await page.locator("#results").isVisible(), false);
@@ -653,7 +800,7 @@ async function runModeFlow(browser, options) {
       assert.equal(revised.revision, rewriteExpected, "a safe wording edit must preserve dates, decimals, numeric units, abbreviations, and quotes");
       assert.ok(!revised.revision.includes("["), "unconfirmed details must not be inserted into the polished record");
       assert.ok(revised.guidance.some(item => /위치.*확인할 사실.*\[/.test(item)), "new details are requested as fill-in guidance");
-      const renderedAnchors = await page.locator("#retakePlacementGuide mark").allTextContents();
+      const renderedAnchors = await page.locator("#retakePlacementGuide mark:not(.review-key-highlight)").allTextContents();
       assert.ok(renderedAnchors.length, "at least one specific source sentence anchors the advice");
       for (const anchor of renderedAnchors) {
         const quote = anchor.match(/“([\s\S]+)”/);
@@ -662,9 +809,13 @@ async function runModeFlow(browser, options) {
       const example = page.locator("#retakeExamplePanel");
       if (await example.getAttribute("open") === null) await example.locator("summary").click();
       assert.equal(await page.locator(".review-rewrite-text").isVisible(), true);
+      await assertExactHighlight(page, rewriteInput, rewriteExpected, rewriteHighlights);
+      await assertTrackProfile(page, false);
+      await assertKeyHighlight(page, rewriteInput, revised);
       assert.match(await page.locator("#retakeWarningText").textContent(), /대괄호.*사실/);
       const changes = page.locator(".review-change-list li");
-      assert.equal(await changes.count(), 1, "the quoted occurrence does not become a suggested edit");
+      assert.equal(await changes.count(), 2, "the quoted occurrence does not become a suggested edit");
+      assert.match(await changes.nth(1).innerText(), /수정 전.*관찰을 실시함.*수정 후.*관찰함/s);
       const change = await changes.first().innerText();
       assert.match(change, /수정 전.*조사를 진행함.*수정 후.*조사함/s);
       assert.ok(change.trim().split("\n").at(-1).trim().length >= 12, "the safe edit has a visible explanation");
@@ -673,6 +824,11 @@ async function runModeFlow(browser, options) {
       assert.ok(followUp.length && followUp.every(item => /\?/.test(item)), "missing evidence is phrased as a concrete question");
       assert.equal(reasons.length, followUp.length, "every question is paired with a reason");
       assert.ok(reasons.every(item => item.replace("보완하는 이유", "").trim().length >= 12));
+      const completionExample = page.locator("#reviewCompletionExample");
+      assert.equal(await completionExample.isVisible(), true, "the missing-fact example is shown separately");
+      const exampleText = await completionExample.innerText();
+      assert.match(exampleText, /이어 쓸 원문.*덧붙일 문장.*\[/s);
+      assert.equal(await completionExample.locator("mark.review-edit-highlight").count(), 0, "unverified fill-ins are never marked as completed edits");
       await page.locator("#copyButton").click();
       const copied = await page.evaluate(() => window.__recordReviewCopiedText);
       assert.ok(copied.includes(revised.grade) && copied.includes(revised.rationale), "copied summary uses the visible decision and rationale");
@@ -682,8 +838,14 @@ async function runModeFlow(browser, options) {
       ]);
       assert.match(download.suggestedFilename(), /라이언의_기록_분석_.*\.html$/);
       const report = await readFile(await download.path(), "utf8");
-      assert.ok(report.includes(rewriteInput) && report.includes(rewriteExpected), "download includes source and safe rewrite");
+      await assertDownloadedHighlight(page, report, rewriteExpected, rewriteHighlights);
       assert.ok(report.includes(revised.rationale), "download contains the visible decision rationale");
+
+      await analyze(page, inquiry);
+      if (await example.getAttribute("open") === null) await example.locator("summary").click();
+      await assertExactHighlight(page, inquiry, inquiry, []);
+      assert.equal(await page.locator(".review-change-list li").count(), 0, "unchanged wording never inherits old highlights or edit notes");
+      await assertStructuralRewrite(page, example);
     }
 
     const samplePrivateInput = inquiry + " 검증용 식별 표식 " + sentinel;
@@ -748,6 +910,7 @@ async function runModeFlow(browser, options) {
       await assertMotionPolicy(page, label + " duel result", "duel");
       await assertReadableContrast(page, ["#resultHeading", "#duelTotalScore", "#duelTotalGrade", "#duelFitSummary"], label + " duel result");
       await assertCenteredFlow(page, label + " duel result", { results: true, duel: true });
+      await assertLightweightSections(page, ["#duelPanel", ".duel-metric-card", ".duel-profile-card"], label + " duel result");
       await assertDuelEvidence(page, label);
     }
 
@@ -790,8 +953,8 @@ async function runReducedMotion(browser, options) {
 
 async function runOfflineCopies(browser) {
   const numberedCopies = [
-    ["라이언의_기록_분석_ver.31.html", { width: 1366, height: 900 }],
-    [join("mobile", "라이언의_기록_분석_모바일_ver.24.html"), { width: 390, height: 844 }],
+    ["라이언의_기록_분석_ver.32.html", { width: 1366, height: 900 }],
+    [join("mobile", "라이언의_기록_분석_모바일_ver.25.html"), { width: 390, height: 844 }],
   ];
   for (const [relative, viewport] of numberedCopies) {
     const context = await browser.newContext({ viewport, offline: true });
@@ -808,6 +971,10 @@ async function runOfflineCopies(browser) {
       await page.locator("[data-level='strict']").click();
       const result = await analyze(page, inquiry);
       assert.equal(result.grade, "A");
+      await analyze(page, rewriteInput);
+      const example = page.locator("#retakeExamplePanel");
+      if (await example.getAttribute("open") === null) await example.locator("summary").click();
+      await assertExactHighlight(page, rewriteInput, rewriteExpected, rewriteHighlights);
       await assertFitsViewport(page, relative);
       await assertBrandAndBackground(page, relative, true);
       assert.deepEqual(errors, [], "offline numbered copy browser errors");
@@ -843,5 +1010,8 @@ try {
     }
   }
 } finally {
-  if (server) await new Promise(resolveClose => server.close(resolveClose));
+  if (server) await new Promise(resolveClose => {
+    server.close(resolveClose);
+    server.closeAllConnections();
+  });
 }

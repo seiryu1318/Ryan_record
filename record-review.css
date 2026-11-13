@@ -601,31 +601,31 @@
   }
 
   .setup-card .action-row {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 12px !important;
-    padding-top: 15px;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 6px !important;
+    padding-top: 12px;
     margin-top: 18px !important;
     border-top: 1px solid var(--review-line);
   }
 
-  .analysis-readiness {
+  .action-row .analysis-readiness {
     margin: 0;
+    min-block-size: 1.45em;
     color: var(--review-muted) !important;
     font-size: .81rem;
+    line-height: 1.45;
+    text-align: center;
+    overflow-wrap: anywhere;
   }
 
   #inputError {
     color: var(--review-error) !important;
   }
 
-  .analysis-readiness:empty {
-    display: none;
-  }
-
-  #analyzeButton {
+  .action-row #analyzeButton {
+    inline-size: min(100%, 260px);
     padding: 10px 20px !important;
     white-space: nowrap;
   }
@@ -1212,10 +1212,8 @@
       width: calc(100% - 20px) !important;
     }
 
-    .setup-card .action-row {
-      flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 7px !important;
+    .action-row #analyzeButton {
+      inline-size: 100%;
     }
   }
 

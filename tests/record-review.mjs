@@ -10,6 +10,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const baseline = process.argv.includes("--baseline");
 const live = process.argv.includes("--live");
+const targetBrowsers = new Set(process.argv.filter(arg => arg.startsWith("--browser=")).map(arg => arg.split("=")[1]));
+const runs = name => targetBrowsers.size === 0 || targetBrowsers.has(name);
 const uiOnly = process.argv.includes("--ui-only");
 const checkRubric = !baseline && !uiOnly;
 const bundledPlaywright = join(homedir(), ".cache", "codex-runtimes", "codex-primary-runtime", "dependencies", "node", "node_modules", "playwright", "index.mjs");
@@ -30,12 +32,15 @@ for (const [file, contentType] of [
   ["record-review.css", "text/css; charset=utf-8"],
   ["record-review.js", "text/javascript; charset=utf-8"],
   ["record-review-model.js", "text/javascript; charset=utf-8"],
+  ["background2.jpg", "image/jpeg"],
+  ["goom.jpg", "image/jpeg"],
 ]) {
   const path = join(root, file);
   if (existsSync(path)) staticFiles.set("/" + file, { bytes: await readFile(path), contentType });
 }
 const server = live ? null : createServer((request, response) => {
-  const source = request.method === "GET" && staticFiles.get(request.url);
+  const url = new URL(request.url, "http://localhost/");
+  const source = request.method === "GET" && staticFiles.get(url.pathname);
   if (!source) {
     response.writeHead(request.url === "/favicon.ico" ? 204 : 404).end();
     return;
@@ -48,7 +53,8 @@ if (server) await new Promise((resolveListen, rejectListen) => {
 });
 const baseUrl = new URL(live ? "https://seiryu1318.github.io/Ryan_record/" : "http://127.0.0.1:" + server.address().port + "/");
 const siteUrl = route => new URL(route.replace(/^\//, ""), baseUrl);
-const allowedRequests = new Set([...staticFiles.keys(), "/favicon.ico"].map(route => siteUrl(route).href));
+const allowedRequests = new Set([...staticFiles.keys(), "/favicon.ico",
+  "/record-review.css?v=31", "/record-review.js?v=31"].map(route => siteUrl(route).href));
 
 const inquiry = "수온에 따라 효모 발효 속도가 달라지는 이유를 질문함. 교과서의 효소 단원을 참고해 온도만 다르게 설정하고 같은 양의 효모에서 발생한 기체 부피를 세 차례 측정함. 측정값을 표로 비교하여 수온이 높은 조건에서 기체 부피가 더 큰 이유를 효소 활성과 연결해 해석함. 첫 측정에서 온도계 위치가 달라 오차가 생긴 한계를 확인하고 센서 위치를 통일해 재측정하여 편차가 줄어든 결과를 표에 표시함.";
 const action = "교내 기후 활동에서 자료 정리 역할을 맡아 기상 관측 자료 두 종류를 날짜별로 정리하고 표로 작성함. 완성한 표를 모둠 발표 자료로 제출함.";
@@ -75,10 +81,27 @@ const scannerFixtures = {
   bullets: "  - 용액 pH 7.4 조건을 설정함\r\n  - E. coli 집락을 3회 관찰함\r\n  - 집락 지름 24mm를 표로 정리함.",
 };
 const sentinel = "qa-private-record-77453@example.invalid";
-const embeddedLogoHash = "22576888ac832c05976e90a75f49baef8ecd85fa5c9493880f4ccc961a6736f2";
+const titleImageHash = "70da7dc0f4e94442349071898ba5382dd63bbeb8c6e426b61e11dad691f85d2a";
+const backgroundImageHash = "4a95e38838c2af29661f03875405bee08f450e55836f1f539904d0b5c59f952d";
+const gisResult = "GIS로 서울 자치구의 산림 면적과 탄소 흡수량 자료를 비교함. 산림 면적이 비슷한 자치구에서도 탄소 흡수량이 감소하는 사례를 발견하여 토지 이용 유형과 수종 차이를 비교함. 자치구별 수치를 표로 정리함.";
+const decimalDuel = "같은 배양 조건에서 E. coli 집락의 지름을 3회 관찰함. 평균 지름 3.0mm와 4.5mm를 비교해 차이를 표로 정리함. 발표 자료에 “3.0mm에서 변화가 시작됨”을 인용함.";
+const dirtyPaste = "\ufeff생명과학\u00a0  활동에서 pH 7.4 조건으로 E. co\u00adli 집락을 관찰함.\r\n\r\n\r\n  집락\u200b   지름을 24mm로 기록하고 ‘측정 결과’와 \"control\"을 비교함.  ";
+const cleanPaste = "생명과학 활동에서 pH 7.4 조건으로 E. coli 집락을 관찰함.\n\n집락 지름을 24mm로 기록하고 ‘측정 결과’와 \"control\"을 비교함.";
 
-function isLogo(data) {
-  return createHash("sha256").update(Buffer.from(data, "base64")).digest("hex") === embeddedLogoHash;
+const wrappedLines = [
+  "화학 수업에서 산과 염기의 반응을 관찰한 뒤 용액의 산성도에 따라 생기는 변화가 다른 이유를 시각",
+  "화하는 방법을 찾고 교과서에서 확인한 원리를 적용하여 같은 양의 용액에 넣은 시약의 양과 흡",
+  "수량의 변화를 표로 정리함. 실험을 반복하면서 용액의 온도와 시약의 양을 동일하게 유지하면 변",
+  "함이 적어지는 것을 확인하고 첫 측정과 비교함.",
+];
+const intentionalStructure = "\n\n- 1차 실험: pH 7.4로 설정함.\n- 2차 실험: pH 7.4에서 3회 측정함.";
+const wrappedPaste = wrappedLines.join("\r\n") + intentionalStructure;
+const unwrappedPaste = wrappedLines.join("") + intentionalStructure;
+
+const deliberateLineBreak = "자료를 비교해 서로 다른 결과가 나타난 원인을 조사하고 관찰값의 범위와 단위를 확인하여 조별 보고서에 정리함.\n수업에서 다음 주의 실험 계획을 설명하고 기록에 필요한 역할과 시간 등을 친구들과 논의하여 합의함.";
+
+function hash(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
 }
 
 async function assertMotionPolicy(page, label, expectedScope = null) {
@@ -167,18 +190,179 @@ async function assertReadableContrast(page, selectors, label) {
   }, selectors);
   assert.deepEqual(failures, [], label + " text contrast");
 }
+async function assertBrandAndBackground(page, label, offline = false) {
+  const logo = page.locator(".brand img.brand-logo");
+  await logo.waitFor({ state: "visible" });
+  const asset = await logo.evaluate(image => ({
+    source: image.currentSrc,
+    width: image.naturalWidth,
+    height: image.naturalHeight,
+    alternate: image.getAttribute("alt"),
+    centerOffset: Math.abs((image.getBoundingClientRect().top + image.getBoundingClientRect().bottom
+      - document.querySelector(".brand h1").getBoundingClientRect().top - document.querySelector(".brand h1").getBoundingClientRect().bottom) / 2),
+  }));
+  assert.ok(asset.width > 0 && asset.height > 0 && asset.alternate !== null, label + " rendered title image");
+  assert.ok(asset.centerOffset <= 12, label + " title and image align vertically");
+  assert.equal(await page.locator("img[src$='goom.jpg'], img.brand-logo").count(), 1, "고옴 is only shown by the title");
+  if (offline) {
+    assert.match(asset.source, /^data:image\/jpeg;base64,/);
+    assert.equal(hash(Buffer.from(asset.source.split(",")[1], "base64")), titleImageHash);
+  } else {
+    assert.match(asset.source, /\/goom\.jpg$/);
+  }
+  const wall = await page.evaluate(() => {
+    const style = getComputedStyle(document.body, "::before");
+    const { position, top, right, bottom, left, backgroundImage, backgroundPosition, backgroundSize } = style;
+    return { position, top, right, bottom, left, backgroundImage, backgroundPosition, backgroundSize };
+  });
+  assert.deepEqual([wall.position, wall.top, wall.right, wall.bottom, wall.left], ["fixed", "0px", "0px", "0px", "0px"], label + " fixed background fills the viewport");
+  assert.match(wall.backgroundPosition.split(",").at(-1).trim(), /^(?:50%|center)/, label + " background image is centered horizontally " + JSON.stringify({ position: wall.backgroundPosition, image: wall.backgroundImage.slice(0, 100) }));
+  assert.match(wall.backgroundSize, /cover/, label + " background covers the viewport");
+  assert.match(wall.backgroundImage, /gradient\(/, label + " has a tint layer");
+  if (offline) {
+    const encoded = wall.backgroundImage.match(/data:image\/jpeg;base64,([a-z0-9+/=]+)/i)?.[1];
+    assert.ok(encoded, "offline background is embedded");
+    assert.equal(hash(Buffer.from(encoded, "base64")), backgroundImageHash);
+  } else {
+    assert.match(wall.backgroundImage, /\/background2\.jpg/);
+  }
+}
+
+async function assertCenteredFlow(page, label, { results = false, duel = false } = {}) {
+  const layout = await page.evaluate(({ results, duel }) => {
+    const selectors = [".app-shell", ".topbar", ...(results ? ["#results"] : ["#analysisPanel .global-tools", "#analysisPanel .setup-card"])];
+    const rectangle = node => {
+      const {left, right, width, top, bottom, height} = node.getBoundingClientRect();
+      return {left, right, width, top, bottom, height};
+    };
+    const cards = selectors.map(selector => rectangle(document.querySelector(selector)));
+    const buttons = [...document.querySelectorAll("#levelButtons > button")].filter(node => node.getClientRects().length).map(rectangle);
+    const visibleFormRows = [...document.querySelectorAll(".setup-card > .section, .setup-card > .action-row")]
+      .filter(node => node.getClientRects().length).map(rectangle).sort((a,b) => a.top-b.top);
+    const duelPanels = duel ? ["#duelTotalMeter", "#duelMetricGrid"]
+      .map(selector => document.querySelector(selector)).filter(node => node?.getClientRects().length).map(rectangle) : [];
+    const top = document.querySelector(".topbar");
+    return { cards, buttons, visibleFormRows, duelPanels, viewWidth: document.documentElement.clientWidth,
+      sticky: getComputedStyle(top).position };
+  }, { results, duel });
+  for (const {left, right, width} of layout.cards) {
+    assert.ok(width > 0 && Math.abs(left - (layout.viewWidth - right)) <= 3, label + " centered card " + JSON.stringify({ left, right, width }));
+    assert.ok(Math.abs(width - layout.cards[0].width) <= 3, label + " aligned card widths");
+  }
+  assert.equal(layout.sticky, "sticky", label + " sticky categorized header");
+  if (results) {
+    assert.ok(layout.cards[2].top - layout.cards[1].bottom <= 48, label + " no blank band above results");
+    assert.equal(layout.buttons.length, 0, "input controls are hidden in the results category");
+  } else {
+    assert.equal(layout.buttons.length, 3, "all evaluation buttons are shown");
+    assert.ok(Math.max(...layout.buttons.map(button => button.width)) - Math.min(...layout.buttons.map(button => button.width)) <= 4,
+      label + " equal evaluation button widths");
+    assert.ok(Math.max(...layout.buttons.map(button => button.top)) - Math.min(...layout.buttons.map(button => button.top)) <= 3,
+      label + " evaluation buttons share a row");
+    for (const [index, row] of layout.visibleFormRows.entries()) {
+      if (index) assert.ok(row.top - layout.visibleFormRows[index - 1].bottom <= 48, label + " no blank form band between consecutive controls");
+    }
+  }
+  if (duel) assert.equal(layout.duelPanels.length, 2, label + " duel total and metrics stay visible");
+}
+
+async function pasteInField(textarea, text, { html = "", range = null } = {}) {
+  return textarea.evaluate((element, { text, html, range }) => {
+    element.focus();
+    const [start, end] = range || [0, element.value.length];
+    element.setSelectionRange(start, end);
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", text);
+    if (html) clipboardData.setData("text/html", html);
+    const event = new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true });
+    if (element.dispatchEvent(event)) {
+      element.setRangeText(text, start, end, "end");
+      element.dispatchEvent(new InputEvent("input", { inputType: "insertFromPaste", bubbles: true, data: text }));
+    }
+    return element.value;
+  }, { text, html, range });
+}
+
+async function assertPasteFormatting(page) {
+  const field = page.locator("#recordText");
+  const actual = await pasteInField(field, dirtyPaste, { html: "<p>discard clipboard formatting</p>" });
+  assert.equal(actual, cleanPaste, "paste removes invisible and duplicated whitespace and preserves decimals, quotes, and paragraph break");
+  assert.equal(await pasteInField(field, deliberateLineBreak), deliberateLineBreak, "a deliberate break between finished sentences remains intact");
+  await field.fill("앞에 [교체할 부분] 뒤에");
+  assert.equal(await pasteInField(field, "측정값\u00a0  7.4", { range: [3, 11] }), "앞에 측정값 7.4 뒤에",
+    "pasting replaces the selection and leaves surrounding content untouched");
+  assert.equal(await pasteInField(field, wrappedPaste), unwrappedPaste, "visually prewrapped Hangul reflows without losing blank paragraphs or list items");
+  const justification = await field.evaluate(element => getComputedStyle(element).textAlign);
+  assert.equal(justification, "justify", "pasted text is justified");
+  await field.blur();
+  assert.equal(await field.inputValue(), unwrappedPaste, "blur does not mutate reformatted text or numeric punctuation");
+}
+
+async function assertDuelEvidence(page, label) {
+  const quote = page.locator("#duelQuote");
+  const note = page.locator("#duelNote");
+  const cards = page.locator("#duelMetricGrid .duel-metric-card");
+  const verifyQuotes = async source => {
+    const citations = await page.locator("#duelQuote .duel-evidence-text:visible, #duelMetricGrid .duel-evidence-text:visible, #duelMetricGrid strong.duel-emphasis:visible").allTextContents();
+    for (const citation of citations) {
+      const text = citation.replace(/^“|”$/g, "").trim();
+      assert.ok(source.includes(text), label + " duel excerpt must be present in the input");
+      assert.doesNotMatch(text, /^(?:0mm|5mm|coli\s)|(?:\d\.|“[^”]+)$/);
+    }
+  };
+
+  await analyze(page, praise, { duel: true });
+  await page.locator("#duelPanel").waitFor({ state: "visible" });
+  assert.equal(await quote.isVisible(), false, label + " no empty representative evidence card");
+  assert.equal(await cards.locator(".duel-evidence-text, strong.duel-emphasis").count(), 0, label + " generic praise does not produce fake metric evidence");
+  const weakNote = await note.innerText();
+  assert.match(weakNote, /무엇|학생이|학생의|행동|결과|자료|확인|써|적/);
+  assert.doesNotMatch(weakNote, /1차 결론 미확인|합격 가능성|대표 장면이 부족/);
+
+  await analyze(page, gisResult, { duel: true });
+  const duelText = await page.locator("#duelPanel").innerText();
+  assert.match(duelText, /흡수량이 감소하는 사례를 발견/);
+  assert.doesNotMatch(duelText, /1차 결론 미확인|대표 장면이 부족/);
+  assert.equal(await cards.count(), 4, label + " four distinct duel dimensions");
+  assert.equal(await quote.isVisible(), true, label + " verified result is visible");
+  assert.match(await quote.locator(".duel-evidence-text").innerText(), /흡수량이 감소하는 사례를 발견/);
+  await verifyQuotes(gisResult);
+
+  await analyze(page, decimalDuel, { duel: true });
+  await verifyQuotes(decimalDuel);
+  const evidence = await page.locator("#duelQuote .duel-evidence-text:visible, #duelMetricGrid .duel-evidence-text:visible, #duelMetricGrid .duel-emphasis:visible").allTextContents();
+  assert.ok(evidence.some(item => /E\. coli|3\.0mm|4\.5mm/.test(item)), "decimal or abbreviation appears intact in duel evidence");
+}
+
 async function assertFitsViewport(page, label) {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, label + " must fit its viewport");
 }
 
+const reviewTabs = { analysis: "#analysisTab", results: "#resultsTab", guide: "#guideTab" };
+const activeReviewSection = page => page.evaluate(() => document.body.dataset.reviewSection || null);
+async function openReviewSection(page, section) {
+  const select = page.locator("#reviewSectionSelect");
+  if (!baseline && await select.isVisible()) {
+    if (await select.inputValue() !== section) await select.selectOption(section);
+    assert.equal(await select.inputValue(), section);
+  } else {
+    const tab = page.locator(reviewTabs[section]);
+    if (await tab.getAttribute("aria-selected") !== "true") await tab.click();
+    assert.equal(await tab.getAttribute("aria-selected"), "true");
+  }
+  if (!baseline) await page.waitForFunction(name => document.body.dataset.reviewSection === name, section);
+}
+
 async function analyze(page, text, { enter = false, duel = false } = {}) {
   const expectCanonical = checkRubric && !duel;
+  if (!baseline) await openReviewSection(page, "analysis");
   await page.locator("#recordText").fill(text);
   const button = page.locator("#analyzeButton");
   assert.equal(await button.isEnabled(), true, "analyze should be enabled after completing inputs");
   if (enter) await page.locator("#recordText").press("Enter");
   else await button.click({ force: baseline });
   await page.locator("#results").waitFor({ state: "visible" });
+  if (!baseline) await page.waitForFunction(() => document.body.dataset.reviewSection === "results");
   await page.waitForFunction(() => document.getElementById("analyzeButton").getAttribute("aria-busy") !== "true");
   if (expectCanonical) await page.waitForFunction(() => document.getElementById("results").dataset.canonicalGrade);
   const result = await page.evaluate(() => ({
@@ -216,7 +400,7 @@ async function openPage(browser, { route, mobile, device, label, reducedMotion =
     } });
     const scopeOf = element => {
       if (!(element instanceof Element)) return null;
-      if (document.getElementById("guideTab")?.getAttribute("aria-selected") === "true"
+      if ((document.body?.dataset.reviewSection === "guide" || document.getElementById("guideTab")?.getAttribute("aria-selected") === "true")
           && element.closest("#guideTab, #guidePanel")) return "guide";
       if (document.body?.dataset.evaluationMode === "duel" && element.closest("#duelButton, #duelPanel")) return "duel";
       return null;
@@ -275,8 +459,9 @@ async function openPage(browser, { route, mobile, device, label, reducedMotion =
   await page.waitForFunction(() => Boolean(document.getElementById("recordText")));
   await assertFitsViewport(page, label + " initial screen");
   if (!baseline) {
-    if (live) assert.match(await page.title(), mobile ? /ver\.23$/ : /ver\.30$/);
-    assert.equal(await page.locator("img.logo, img[alt='라이언 캐릭터'], [src*='고옴']").count(), 0, "removed image must be absent");
+    if (live) assert.match(await page.title(), mobile ? /ver\.24$/ : /ver\.31$/);
+    await assertBrandAndBackground(page, label);
+    await assertCenteredFlow(page, label + " initial screen");
     await assertMotionPolicy(page, label + " initial screen");
   }
   return { context, page, attempts, errors };
@@ -319,9 +504,32 @@ async function runModeFlow(browser, options) {
     const viewSwitch = await page.locator(".version-switch-button").getAttribute("href");
     assert.match(viewSwitch, mobile ? /(?:\/Ryan_record\/|\.\.\/)$/ : /(?:\/Ryan_record\/)?mobile\/$/);
     const mainTab = page.locator("#analysisTab");
-    const guideTab = page.locator("#guideTab");
-    await guideTab.click();
-    assert.equal(await guideTab.getAttribute("aria-selected"), "true");
+    const sectionSelect = page.locator("#reviewSectionSelect");
+    if (!baseline) {
+      assert.equal(await activeReviewSection(page), "analysis");
+      assert.equal(await page.locator("#results").isVisible(), false);
+      assert.equal(await page.locator("#guidePanel").isVisible(), false);
+      assert.equal(await sectionSelect.isVisible(), Boolean(mobile), "mobile uses the dropdown");
+      assert.equal(await mainTab.isVisible(), !mobile, "desktop uses the three tabs");
+      if (!mobile) assert.equal(await page.locator("#resultsTab").isVisible(), true);
+    }
+    if (!baseline) {
+      await openReviewSection(page, "results");
+      assert.equal(await page.locator("#results").isVisible(), false, "empty results never show a stale analysis");
+      assert.equal(await page.locator("#resultEmpty").isVisible(), true, "results explain how to start when empty");
+      await page.locator("#resultInputButton").click();
+      assert.equal(await activeReviewSection(page), "analysis");
+      assert.equal(await page.locator("#recordText").evaluate(field => field === document.activeElement), true);
+      if (!mobile) {
+        await mainTab.press("ArrowRight");
+        assert.equal(await activeReviewSection(page), "results");
+        assert.equal(await page.locator("#resultsTab").evaluate(tab => tab === document.activeElement), true);
+        await page.locator("#resultsTab").press("ArrowRight");
+        assert.equal(await activeReviewSection(page), "guide");
+        assert.equal(await page.locator("#guideTab").evaluate(tab => tab === document.activeElement), true);
+      }
+    }
+    await openReviewSection(page, "guide");
     const guide = page.locator("#guidePanel");
     assert.equal(await guide.isVisible(), true);
     if (!baseline) {
@@ -337,17 +545,21 @@ async function runModeFlow(browser, options) {
       assert.match(guideText, /대괄호.*확인한 내용/s);
       await assertMotionTriggered(page, "guide", "guidePanel");
       await assertMotionPolicy(page, label + " guide", "guide");
-      await assertReadableContrast(page, ["#guideTab", "#guidePanel h2"], label + " guide");
+      await assertReadableContrast(page, [mobile ? "#reviewSectionSelect" : "#guideTab", "#guidePanel h2"], label + " guide");
     }
-    await mainTab.click();
-    assert.equal(await mainTab.getAttribute("aria-selected"), "true");
+    await openReviewSection(page, "analysis");
     if (!baseline) await assertMotionPolicy(page, label + " return to analysis");
 
     const analyzeButton = page.locator("#analyzeButton");
     const textarea = page.locator("#recordText");
+    if (!baseline) {
+      await assertPasteFormatting(page);
+      await textarea.fill("");
+    }
     assert.equal(await analyzeButton.isDisabled(), true);
     await textarea.fill("짧은 문구");
     assert.equal(await analyzeButton.isDisabled(), true);
+    if (!baseline) await openReviewSection(page, "analysis");
     await page.locator("[data-area='overall']").click();
     await page.locator("#sampleButton").click();
     assert.ok((await textarea.inputValue()).length > 30, "sample fills the selected area");
@@ -356,13 +568,30 @@ async function runModeFlow(browser, options) {
     assert.equal(await analyzeButton.isDisabled(), true);
 
     await page.locator("[data-target='science']").click();
+    if (!baseline) await openReviewSection(page, "analysis");
     await page.locator("[data-level='strict']").click();
     assert.equal(await page.locator("[data-level='strict']").getAttribute("aria-pressed"), "true");
-    if (!baseline) await assertReadableContrast(page, ["#analysisTab", "[data-level='strict']", "[data-area='overall']", "#recordText"], label + " analysis");
+    if (!baseline) await assertReadableContrast(page, [mobile ? "#reviewSectionSelect" : "#analysisTab", "[data-level='strict']", "[data-area='overall']", "#recordText"], label + " analysis");
     const strong = await analyze(page, inquiry, { enter: !mobile });
     if (!baseline) {
+      await assertCenteredFlow(page, label + " ordinary result", { results: true });
       await assertMotionPolicy(page, label + " ordinary result");
       await assertReadableContrast(page, ["#precisionGrade", "#precisionRationale"], label + " ordinary result");
+      assert.equal(await textarea.isVisible(), false, "records are not shown alongside results");
+      await openReviewSection(page, "guide");
+      assert.equal(await page.locator("#results").isVisible(), false);
+      await openReviewSection(page, "analysis");
+      assert.equal(await textarea.inputValue(), inquiry, "navigating back preserves the entered record");
+      assert.equal(await page.locator("[data-area='overall']").getAttribute("aria-pressed"), "true");
+      assert.equal(await page.locator("[data-level='strict']").getAttribute("aria-pressed"), "true");
+      await openReviewSection(page, "results");
+      assert.equal(await page.locator("#precisionGrade").innerText(), strong.grade, "navigating preserves the previous results");
+      const sticky = await page.evaluate(() => {
+        const header = document.querySelector(".topbar");
+        window.scrollTo(0, 400);
+        return { scroll: window.scrollY, top: header.getBoundingClientRect().top };
+      });
+      assert.ok(sticky.scroll < 100 || (sticky.top >= -1 && sticky.top <= 20), label + " header remains visible while scrolling");
     }
     const middle = await analyze(page, action);
     const weak = await analyze(page, praise);
@@ -382,6 +611,7 @@ async function runModeFlow(browser, options) {
       const separate = await analyze(page, disjoint);
       assert.equal(separate.grade, "B", "an unrelated interpretation cannot elevate the first activity");
       assert.ok(!separate.evidence.includes("소설 주인공"), "unrelated literature evidence must not be applied to the measurement");
+      if (!baseline) await openReviewSection(page, "analysis");
       await page.locator("[data-area='behavior']").click();
       const behavior = await analyze(page, behaviorOutcome);
       assert.match(behavior.grade, /^[AB]$/, "a brief observable community outcome establishes positive evidence");
@@ -390,12 +620,16 @@ async function runModeFlow(browser, options) {
       const behaviorGaps = await analyze(page, action);
       assert.ok(behaviorGaps.guidance.some(item => /상대|공동체|학급|반응/.test(item)),
         "behavior feedback should ask for directly observed effects on others");
+      if (!baseline) await openReviewSection(page, "analysis");
       await page.locator("[data-area='career']").click();
       const careerGaps = await analyze(page, action);
       assert.ok(careerGaps.guidance.some(item => /진로|관심 분야|판단 기준/.test(item)),
         "career feedback should connect the evidence to an exploration question or decision");
+      if (!baseline) await openReviewSection(page, "analysis");
       await page.locator("[data-area='overall']").click();
     }
+
+    if (!baseline) await openReviewSection(page, "analysis");
 
     await page.locator("[data-level='normal']").click();
     const normalWeak = await analyze(page, praise);
@@ -463,6 +697,7 @@ async function runModeFlow(browser, options) {
     assert.deepEqual(persistence, { local: false, session: false, cookie: false, db: 0 });
 
     const confirm = page.locator("#subjectSettingsDialog .dialog-confirm");
+    if (!baseline) await openReviewSection(page, "analysis");
     await page.locator("[data-area='subject']").click();
     await page.locator("#subjectSettingsDialog").waitFor({ state: "visible" });
     await page.waitForFunction(() => document.getElementById("analyzeButton").disabled);
@@ -495,6 +730,10 @@ async function runModeFlow(browser, options) {
     assert.equal(await duelButton.getAttribute("aria-pressed"), "true");
     if (!baseline) {
       assert.notDeepEqual(await buttonColor(), before, "duel mode should change the button colors");
+      const guide = await page.locator("#levelGuide").innerText();
+      assert.match(guide, /100점/);
+      assert.match(guide, /네 가지|4가지/);
+      await assertCenteredFlow(page, label + " duel input");
       await assertMotionTriggered(page, "duel");
       await assertMotionPolicy(page, label + " duel activation", "duel");
     }
@@ -507,8 +746,12 @@ async function runModeFlow(browser, options) {
     if (!baseline) {
       await assertMotionTriggered(page, "duel", "duelPanel");
       await assertMotionPolicy(page, label + " duel result", "duel");
-      await assertReadableContrast(page, ["#duelButton", "#resultHeading", "#duelTotalScore", "#duelTotalGrade", "#duelStrengths li"], label + " duel result");
+      await assertReadableContrast(page, ["#resultHeading", "#duelTotalScore", "#duelTotalGrade", "#duelFitSummary"], label + " duel result");
+      await assertCenteredFlow(page, label + " duel result", { results: true, duel: true });
+      await assertDuelEvidence(page, label);
     }
+
+    if (!baseline) await openReviewSection(page, "analysis");
 
     await page.locator("[data-level='strict']").click();
     await page.locator("#duelPanel").waitFor({ state: "hidden" });
@@ -527,10 +770,10 @@ async function runReducedMotion(browser, options) {
   const { page, context, attempts, errors } = await openPage(browser, { ...options, reducedMotion: "reduce" });
   const label = options.label + " reduced motion";
   try {
-    await page.locator("#guideTab").click();
+    await openReviewSection(page, "guide");
     await page.locator("#guidePanel").waitFor({ state: "visible" });
     await assertMotionPolicy(page, label + " guide");
-    await page.locator("#analysisTab").click();
+    await openReviewSection(page, "analysis");
     await page.locator("#duelButton").click();
     await assertMotionPolicy(page, label + " duel activation");
     await page.locator("[data-target='science']").click();
@@ -547,8 +790,8 @@ async function runReducedMotion(browser, options) {
 
 async function runOfflineCopies(browser) {
   const numberedCopies = [
-    ["라이언의_기록_분석_ver.30.html", { width: 1366, height: 900 }],
-    [join("mobile", "라이언의_기록_분석_모바일_ver.23.html"), { width: 390, height: 844 }],
+    ["라이언의_기록_분석_ver.31.html", { width: 1366, height: 900 }],
+    [join("mobile", "라이언의_기록_분석_모바일_ver.24.html"), { width: 390, height: 844 }],
   ];
   for (const [relative, viewport] of numberedCopies) {
     const context = await browser.newContext({ viewport, offline: true });
@@ -558,12 +801,15 @@ async function runOfflineCopies(browser) {
       page.on("pageerror", error => errors.push(error.message));
       await page.goto(pathToFileURL(join(root, relative)).href, { waitUntil: "load" });
       await page.waitForFunction(() => Boolean(window.RyanRecordReview));
+      if (!baseline) await openReviewSection(page, "analysis");
       await page.locator("[data-area='overall']").click();
       await page.locator("[data-target='science']").click();
+      if (!baseline) await openReviewSection(page, "analysis");
       await page.locator("[data-level='strict']").click();
       const result = await analyze(page, inquiry);
       assert.equal(result.grade, "A");
       await assertFitsViewport(page, relative);
+      await assertBrandAndBackground(page, relative, true);
       assert.deepEqual(errors, [], "offline numbered copy browser errors");
       console.log(JSON.stringify({ offlineCopy: relative, grade: result.grade }));
     } finally {
@@ -574,21 +820,19 @@ async function runOfflineCopies(browser) {
 
 try {
   if (!baseline && !live) {
-    for (const [route, bytes] of pages) {
-      const source = bytes.toString("utf8");
-      assert.ok(![...source.matchAll(/data:image\/\w+;base64,([A-Za-z0-9+/=]+)/g)].some(match => isLogo(match[1])), route + " must not embed the removed image");
-    }
+    assert.equal(hash(staticFiles.get("/goom.jpg")?.bytes || Buffer.alloc(0)), titleImageHash, "title image is the requested original file");
+    assert.equal(hash(staticFiles.get("/background2.jpg")?.bytes || Buffer.alloc(0)), backgroundImageHash, "fixed background is the requested original file");
   }
   const desktop = await chromium.launch({ headless: true, ...(existsSync(browserPath) ? { executablePath: browserPath } : {}) });
   try {
-    await runModeFlow(desktop, { route: "/", label: "Chromium desktop" });
-    await runModeFlow(desktop, { route: "/mobile/", mobile: true, label: "Chromium mobile" });
-    if (!baseline) await runReducedMotion(desktop, { route: "/", label: "Chromium desktop" });
+    if (runs("desktop")) await runModeFlow(desktop, { route: "/", label: "Chromium desktop" });
+    if (runs("mobile")) await runModeFlow(desktop, { route: "/mobile/", mobile: true, label: "Chromium mobile" });
+    if (!baseline && runs("desktop")) await runReducedMotion(desktop, { route: "/", label: "Chromium desktop" });
     if (process.argv.includes("--offline")) await runOfflineCopies(desktop);
   } finally {
     await desktop.close();
   }
-  if (process.argv.includes("--webkit")) {
+  if (process.argv.includes("--webkit") && runs("webkit")) {
     const safari = await webkit.launch({ headless: true });
     try {
       const options = { route: "/mobile/", mobile: true, device: devices["iPhone 13"], label: "WebKit iPhone 13" };

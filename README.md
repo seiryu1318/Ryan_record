@@ -6,7 +6,7 @@
 
 [평가 기준과 자료 검증](docs/rubric-evidence.md)을 참조하세요. UI는 GDWEB의 [디지털 정부서비스 UI/UX 가이드라인](https://www.gdweb.co.kr/sub/view.asp?str_no=22102)과 [서울사이버대학교 입학지원센터](https://www.gdweb.co.kr/sub/view.asp?Txt_fgbn=7&str_no=27102)를 참고했습니다.
 
-활성 페이지는 `index.html`, `mobile/index.html`이며 두 페이지가 `record-review.css`와 `record-review.js`를 공유합니다. 번호가 붙은 최신 HTML은 두 자산이 내장되어 오프라인에서도 열 수 있습니다.
+활성 페이지는 `index.html`, `mobile/index.html`이며 두 페이지가 `record-review.css`와 `record-review.js`를 공유합니다. PC는 상단 탭, 모바일은 메뉴 선택 상자로 기록 입력, 결과, 사용 방법을 전환합니다. 번호가 붙은 최신 HTML에는 스타일, 스크립트, 제목 이미지와 배경이 내장되어 오프라인에서도 열 수 있습니다.
 
 ```sh
 node tools/build-offline.mjs

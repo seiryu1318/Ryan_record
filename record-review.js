@@ -1,7 +1,7 @@
 /* Ryan Record: evidence-based review. Runs locally in the browser; no I/O. */
 (function (root) {
   "use strict";
-  const VERSION = "v30-record-evidence@2";
+  const VERSION = "v31-record-evidence@1";
   const AREAS = {
     overall: { label:"전반 분석", start:"어떤 수업·관찰에서 어떤 질문이나 문제가 생겼는지", method:"학생이 선택한 기준·자료·방법", depth:"결과를 통해 무엇을 판단했고 그 근거가 무엇인지" },
     autonomy: { label:"자율활동", start:"학급이나 학교에서 어떤 필요를 발견했는지", method:"학생이 맡은 역할과 직접 제안하거나 조정한 방법", depth:"학생의 조치 뒤 학급 운영이나 구성원 참여가 어떻게 달라졌는지" },
@@ -66,6 +66,12 @@
   const ABBREV = /(?:\b[A-Za-z]|\b(?:vs|etc|Mr|Ms|Dr|Fig|No)|\b(?:[A-Za-z]\.){1,3}[A-Za-z])\.$/i;
   const HEADING = /^(?:[\u2022▪◆#*\s-]*)(?:(?:\[\s*([^\]\r\n]{1,26})\s*\]|【\s*([^】\r\n]{1,26})\s*】)|((?:(?:제?\s*\d+\s*(?:차|번째)|[가나다라]\s*[.)])\s*)?(?:자율(?:활동)?|진로(?:활동)?|동아리(?:활동)?|교과\s*세특|교과별\s*세부능력\s*및\s*특기사항|행동특성(?:\s*및\s*종합의견)?|(?:활동|사례|장면|과제)\s*\d+))\s*[:：])/;
   const HEADING_LABEL = /자율|진로|동아리|세특|세부능력|행동특성|종합의견|활동|사례|장면|과제|수업|단원/;
+  const PASTE_BREAK = /^(?:[-*•▪◆◦‣]\s|\d{1,2}[.)]\s|[①-⑳]\s?|[가나다라][.)]\s|(?:\[[^\]]{1,35}\]|【[^】]{1,35}】)|(?:자율활동|진로활동|동아리활동|교과\s*세특|행동특성|종합의견)\s*[:：])/;
+  const WRAP_TOKENS = new Set(("시각화 흡수량 탐구활동 구성원 결과물 교육과정 실험조건 실험결과 측정값 측정기기 공공데이터 온실가스 이산화탄소 산림면적 기후변화 지구온난화 시뮬레이션 프로그램 고등학교 교과서 보고서 비교표 분류표 안내문 논설문 자료집 재검증 재측정 재실험 재분석 미세먼지 시간대 기상자료 인공지능 수학적 통계적 환경공학 활용하여 변화함 변함 발견하여 확인하여 측정하여 계산하여 분석하여 비교하여 관찰하여 설명하여 정리하여 설계하여 작성하여 활용함 활용하는 작용함 작용함을 시사함 파악하고 기록하고 자치구 자치구별 지역별 흡수량의 흡수량도").split(" "));
+  const WRAP_END = /(?:함|됨|임|했음|였음|않음|없음)[.!?。！？]?$|[.!?。！？:：;；]$/;
+  const WRAP_LINK = /^(?:그리고|그러나|하지만|한편|이후|또한|따라서|반면|특히|그 결과|이를|의견을|연구 과정에서)\s/;
+  const WRAP_PARTICLE = /^(?:하고|하는|하며|하여|했던|하였|했으며|한|할|한가|됨|되는|되어|함을|함으로|함|처럼|과|와|에서|의|이|가|은|는|을|를|으로|로|도|이나|에|에게|까지|부터|만|며|으며|고|였)[가-힣]*(?:\s|[,.!?。！？]|$)/;
+  const WRAP_STANDALONE = /^(?:수|좀|더|각|두|세|첫|그|이|또|한|및|등|중|뒤|전|후|앞|내|간|왜|잘|새|곧|못|안|늘|모든|이런|관련|해당|학생|내용|분석|비교|탐구|기록|공동체|과정|자료|문제|결과|활동|조건|산림|탄소|흡수|관찰|방식|기준|문장|차이|변화|의미|원인|사례|정리|시각)$/;
   const ROLE_DEPENDENT = /(?:말|설명|자료|기록|결과|수치|의견|방식|이야기|사례|과정|장면|상황|때|모습|내용)(?:을|를|이|가|에|로|으로|에서|처럼|과|와|도|만)?(?:\s|$)/;
   const BORROWED_WRAP = /(?:했다고|하였다고|했다는|하였다는|확인했다는|밝혔다고|발표했다는|나타났다고).{0,26}(?:적혀|쓰여|제시|듣|들었|읽|인용|옮겨|요약|소개)/;
   const WATCHED = /(?:결과|장면|모습|설명|발표|시범)(?:을|를)?\s*(?:보고|보며|보았|듣고|들으며|들었|읽고|읽으며|인용|관찰만)/;
@@ -76,6 +82,60 @@
   const normalize = value => value.normalize("NFC").replace(/\s+/g," ").trim();
   const has = (rx,text) => rx.test(text);
   const escape = value => textOf(value).replace(/[&<>"']/g,ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[ch]);
+
+  function cleanPastedText(value) {
+    // Copy from PDF/HWP often contains formatting-only breaks and spaces.
+    // No spelling correction is applied to ordinary paragraphs or numbered lists.
+    const source = textOf(value).replace(/\r\n?|\u2028/g,"\n").replace(/\u2029/g,"\n\n")
+      .replace(/\u00ad[ \t]*\n[ \t]*/g,"").replace(/[\u00ad\u200b\u2060\ufeff]/g,"")
+      .replace(/[\t\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/g," ");
+    const lineWidth = s => [...s].reduce((n,c) => n+(/[가-힣\u1100-\u11ff\u2e80-\u9fff]/.test(c) ? 2 : 1),0);
+    const cleanLine = line => line.replace(/ {2,}/g," ").trim();
+    function join(left,right) {
+      const a = left.match(/[가-힣]+$/)?.[0] || "";
+      const b = right.match(/^[가-힣]+/)?.[0] || "";
+      const merged = a+b;
+      const known = a && b && [...WRAP_TOKENS].some(word => word.length > a.length && merged.startsWith(word));
+      if (known || /\d[.,]$/.test(left) && /^\d/.test(right) || /^[,.;!?。！？%)\]”’]/.test(right)) return "";
+      if (!a || !b || WRAP_LINK.test(right) || WRAP_END.test(left)) return " ";
+      if (WRAP_PARTICLE.test(right) && !WRAP_STANDALONE.test(b) && (/^[가-힣]{1,3}$/.test(a) || /^(?:함을|되는|하여|하고|하는|하였|했으며)/.test(b))) return "";
+      if (a.length <= 2 && b.length >= 2 && !WRAP_STANDALONE.test(a)
+        && !/(?:으로|에서|에게|부터|까지|하고|하며|하면|보다)$/.test(a)
+        && !/^(?:그|이|저|한|더|몇|각|각각|다른|같은|여러|모든|해당|관련|새로운|매우|통해|위해|경우|방법|사례)$/.test(b)) return "";
+      return " ";
+    }
+    function reflow(lines) {
+      if (lines.length < 2) return lines.join("\n");
+      const widths = lines.map(lineWidth);
+      const regular = widths.slice(0,-1).sort((a,b) => a-b);
+      const typical = regular[Math.floor(regular.length/2)];
+      const packed = regular.filter(width => Math.abs(width-typical) <= Math.max(7,typical*.13)).length;
+      const apparentWrap = typical >= 36 && packed >= Math.ceil(regular.length*.75) && widths.at(-1) <= typical*1.16
+        && (lines.length >= 3 || (!WRAP_END.test(lines[0]) && (widths[1] < widths[0] || lineWidth(lines[0]) >= 60)));
+      if (!apparentWrap) return lines.join("\n");
+      return lines.slice(1).reduce((out,right,i) => out+join(lines[i],right)+right,lines[0]);
+    }
+    return source.split(/\n[ ]*\n(?:[ ]*\n)*/).map(block => {
+      const groups = [];
+      for (const line of block.split("\n").map(cleanLine).filter(Boolean)) {
+        if (!groups.length || PASTE_BREAK.test(line)) groups.push([]);
+        groups.at(-1).push(line);
+      }
+      return groups.map(reflow).join("\n");
+    }).filter(Boolean).join("\n\n");
+  }
+
+  function bindPaste(field) {
+    field?.addEventListener("paste",event => {
+      const value = event.clipboardData?.getData("text/plain");
+      if (value == null || value === "") return;
+      const cleaned = cleanPastedText(value);
+      if (cleaned === value) return;
+      event.preventDefault();
+      field.setRangeText(cleaned,field.selectionStart,field.selectionEnd,"end");
+      field.dispatchEvent(new Event("input",{bubbles:true}));
+    });
+  }
 
   function spans(input, pattern, start = 0, sentence = false, probe = input) {
     const out = [];
@@ -146,7 +206,7 @@
     return "student";
   }
 
-  function scan(input) {
+  function scan(input, comparison = false) {
     const quotes = scanQuotes(input);
     const sentences = spans(input,SENTENCE_BREAK,0,true,quotes.allMasked);
     const frames = [];
@@ -185,6 +245,7 @@
         const artifact = /(?:보고서|제안서|발표문|발표\s*자료|안내문|비교표|요약표|결과표|집계표|일정표|기록표|표로|그래프로|분류표|역할표|산출물|영상|장치|모형|지도|코드|프로그램|체크리스트|설문지|카드뉴스|공유표|자료집)/.test(text)
           && /제작|작성|구현|정리|완성|만들|만듦|공유|발표/.test(text) && tokens.length >= 3;
         const observation = MEASURE.test(text) || artifact || validNull
+          || (comparison && /(?:증가|감소|줄어|늘어|늘었|낮아|높아|달라|완화|개선|유지).{0,22}(?:사례|관계|경향|조건|모습|반응).{0,16}(?:발견|확인|관찰|정리|파악)|(?:사례|관계|경향|조건).{0,22}(?:발견|확인|관찰|파악)/.test(text) && tokens.length >= 4)
           || (RERUN.test(text) && /(?:줄어든|줄었|늘어난|늘었|높아진|낮아진|달라진|일치|개선|편차|오차).{0,20}(?:결과|표에|표시|확인|기록)/.test(text))
           || (RESULT.test(text) && /(?:[다는]고\s*(?:확인|판단|설명)|(?:[다는]는|[었였]다는|았다는)\s*(?:점|것|사실)|(?:높|낮|많|적|줄|늘|달라|차이|같|비슷|유지|달성).{0,22}(?:확인|발견|나타|보였|설명|파악)|(?:나타남|밝힘|완성함|개선됨|반영됨|해결함))/.test(text) && tokens.length >= 2);
         const ownResult = done && actor === "student" && observation && (RESULT.test(text) || validNull)
@@ -225,6 +286,59 @@
       if (!best || candidate.score > best.score) best = candidate;
     }
     return best;
+  }
+
+  function scanComparison(value, area) {
+    const source = textOf(value);
+    const {frames,groups,quotes} = scan(source,true);
+    const belongs = frame => frame && !frame.plan && !frame.neg && !frame.borrowed && (frame.actor === "student" || frame.peerOutcome);
+    const usable = frames.filter(belongs);
+    const best = groups.flatMap(group => [area === "behavior" ? null : route(group,false),route(group,true)])
+      .filter(Boolean).sort((a,b) => b.score-a.score)[0];
+    const result = best?.end || usable.find(f => f.ownResult) || null;
+    const next = best?.rechecked || best?.follow || null;
+    const method = best?.action || usable.find(f => f.method) || null;
+    const own = frame => frame?.actor === "student" && belongs(frame);
+    const learning = usable.find(f => own(f) && f.source) || null;
+    const trigger = best?.start || usable.find(f => own(f) && f.starts) || null;
+    const interpretation = best?.judgment || (result && usable.find(f => own(f) && f.interpretation && f.start >= result.start && f.index <= result.index + 1)) || null;
+    const reflection = usable.find(f => own(f) && f.limit) || null;
+    const sentences = spans(source,SENTENCE_BREAK,0,true,quotes.allMasked);
+    const quoteResult = result && frames.filter(frame => frame.index === result.index).every(frame => frame.actor === result.actor && !frame.plan && !frame.borrowed)
+      ? sentences[result.index]?.span || result.span : result?.span || "";
+    return {
+      sentences:sentences.map(item => item.span),
+      trigger:trigger?.span || "", learning:learning?.span || "", method:method?.span || "", result:quoteResult,
+      interpretation:interpretation?.span || "", next:next?.span || "", reflection:reflection?.span || "",
+      community:Boolean(best?.community), verifiedResult:Boolean(result)
+    };
+  }
+
+  function renderComparison(report, raw, doc) {
+    const byId = id => doc.getElementById(id);
+    const scan = report.scannedEvidence || scanComparison(raw,report.area);
+    const summary = byId("duelFitSummary");
+    if (summary) summary.textContent = scan.verifiedResult
+      ? scan.community ? "학생이 한 행동과 그 뒤의 반응이 기록에 드러납니다."
+        : scan.next ? "학생이 직접 확인한 결과와 이를 바탕으로 이어 간 활동이 드러납니다."
+          : "학생이 관찰하거나 비교해 얻은 결과가 기록에 드러납니다."
+      : scan.method ? "수행 과정은 보이지만 관찰한 결과가 아직 드러나지 않습니다."
+        : "활동에 참여했다는 설명만으로는 학생이 맡은 일을 알기 어렵습니다.";
+    const quote = byId("duelQuote");
+    if (quote) {
+      quote.hidden = !scan.result;
+      quote.innerHTML = scan.result ? '<strong>확인한 결과</strong><span class="duel-evidence-text">'+escape(scan.result)+'</span>' : "";
+    }
+    const note = byId("duelNote");
+    const priority = scan.verifiedResult
+      ? !scan.interpretation && !scan.next ? "관찰한 차이를 어떤 근거로 해석했는지 덧붙여 주세요."
+        : !scan.next ? "그 판단을 다시 확인했거나 다른 활동에 적용했다면 무엇을 했는지 이어 써 주세요." : ""
+      : scan.method ? "수행 문장 뒤에 직접 관찰한 차이, 완성한 결과물, 또는 상대의 반응을 적어 주세요."
+        : "활동 이름 뒤에 학생이 직접 선택하거나 수행한 일부터 구체적으로 적어 주세요.";
+    if (note) {
+      note.hidden = !priority;
+      note.innerHTML = priority ? '<strong>먼저 보완할 부분</strong><span>'+escape(priority)+'</span>' : "";
+    }
   }
 
   function evidence(item) {
@@ -356,7 +470,12 @@
     if (!best?.action) add("action","학생이 직접 한 일",action || source || other || frames[0],"활동 소개 뒤","다음 내용을 실제로 확인되는 범위에서 써 주세요: "+profile.method+".",area === "behavior" ? "[관찰된 상황]에서 [학생이 직접 한 행동]을 함." : "[대상·조건]을 [학생이 선택한 방법]으로 살핌.");
     if (!end || grade === "C") add("result","행동 뒤 확인한 결과",best?.action || action || source || plan || neg,"학생의 행동 뒤",resultGap+" 실제로 확인한 반응·관찰·산출물만 이어 쓰세요.",area === "behavior" || area === "autonomy" ? "그 뒤 [실제로 관찰된 상대의 반응이나 학급의 변화]가 나타남." : "[직접 확인한 차이·수치·산출물]을 확인함.");
     if (!start) add("start","출발 상황 또는 질문",action || frames[0],"첫 활동을 설명하기 전","다음 내용을 밝혀 주세요: "+profile.start+".","[수업·관찰·공동체 상황]에서 [구체 질문이나 필요]를 발견함.");
-    if (end && !areaDepth) add("depth","결과에 대한 판단",end,"결과 문장 뒤",profile.depth+" 확인해 보세요. 후속 행동은 실제로 한 경우에만 적으세요.",area === "behavior" ? "[관찰된 반응]을 바탕으로 [다음에 실제로 이어 간 행동]을 함." : "[직접 확인한 결과]를 근거로 [당시 내린 판단이나 실제 수정]을 설명함.");
+    if (end && (!areaDepth || grade === "B" && start && courseLink !== false && hasRoleInClub)) {
+      const hasInterpretation = Boolean(areaDepth);
+      add("depth",hasInterpretation ? "판단을 뒷받침하는 근거" : "결과에 대한 판단",depth || end,"결과를 설명한 문장 뒤",
+        hasInterpretation ? "어떤 자료나 관찰을 근거로 그렇게 판단했는지 더 구체적으로 적어 주세요." : profile.depth+" 확인해 보세요. 후속 행동은 실제로 한 경우에만 적으세요.",
+        area === "behavior" ? "[관찰된 반응]을 바탕으로 [다음에 실제로 이어 간 행동]을 함." : "[직접 확인한 결과]를 근거로 [당시 내린 판단이나 실제 수정]을 설명함.");
+    }
     if (!hasRoleInClub) add("role","팀과 개인의 역할 구분",action,"팀 활동을 설명한 문장 뒤","팀 전체의 성과와 학생 개인이 맡아 완성한 부분을 구분해 주세요.","모둠 과제에서 [학생의 담당 역할]을 맡아 [학생의 결과물]을 완성함.");
     const legacyEvidence = (legacy?.evidence || []).filter(item => item?.span && text.slice(item.start,item.end) === item.span);
     const useLegacyEvidence = grade !== "C" && !end && legacyEvidence.length > 0;
@@ -483,6 +602,15 @@
     renderRevision(canonical,doc);
   }
 
-  root.RyanRecordReview = Object.freeze({version:VERSION,assess,render});
+  const exactSentences = value => {
+    const source = textOf(value);
+    return spans(source,SENTENCE_BREAK,0,true,scanQuotes(source).allMasked).map(item => item.span);
+  };
+  root.RyanRecordReview = Object.freeze({version:VERSION,assess,render,cleanPastedText,scanComparison,renderComparison,exactSentences});
+  if (typeof document === "object") {
+    const attach = () => bindPaste(document.getElementById("recordText"));
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded",attach,{once:true});
+    else attach();
+  }
   if (typeof module === "object" && module.exports) module.exports = root.RyanRecordReview;
 })(typeof window === "object" ? window : globalThis);

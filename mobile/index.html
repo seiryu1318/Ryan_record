@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>라이언의 기록 분석 모바일 ver.23</title>
+  <title>라이언의 기록 분석 모바일 ver.24</title>
   <style>
 
 /* noto-sans-kr-cyrillic-wght-normal */
@@ -3777,8 +3777,8 @@ body.mobile-build{font-size:15px}
       #duelPanel .duel-analysis-columns { grid-template-columns:1fr !important; }
     }
   </style>
-  <link rel="stylesheet" href="../record-review.css">
-  <script defer src="../record-review.js"></script>
+  <link rel="stylesheet" href="../record-review.css?v=31">
+  <script defer src="../record-review.js?v=31"></script>
 </head>
 <body class="mobile-build">
 
@@ -3791,14 +3791,17 @@ body.mobile-build{font-size:15px}
   <main class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-copy"><h1>라이언의 기록 분석</h1><p>학교생활기록부 문구 점검</p></div>
+        <img class="brand-logo" src="../goom.jpg" alt="" width="56" height="56">
+        <div class="brand-copy"><h1>라이언의 기록 분석</h1></div>
 
       </div>
 
-      <div class="topbar-actions"><nav class="primary-tabs" role="tablist" aria-label="주요 메뉴">
-      <button class="primary-tab" id="analysisTab" type="button" role="tab" aria-selected="true" aria-controls="analysisPanel" tabindex="0">기록 분석</button>
+      <div class="topbar-actions"><nav class="primary-tabs review-nav" role="tablist" aria-label="주요 메뉴">
+      <button class="primary-tab" id="analysisTab" type="button" role="tab" aria-selected="true" aria-controls="inputPanel" tabindex="0">기록 입력</button>
+      <button class="primary-tab" id="resultsTab" type="button" role="tab" aria-selected="false" aria-controls="resultPanel" tabindex="-1">분석 결과</button>
       <button class="primary-tab" id="guideTab" type="button" role="tab" aria-selected="false" aria-controls="guidePanel" tabindex="-1">사용 방법</button>
     </nav>
+        <div class="review-mobile-nav"><label for="reviewSectionSelect">메뉴</label><select id="reviewSectionSelect"><option value="analysis">기록 입력</option><option value="results">분석 결과</option><option value="guide">사용 방법</option></select></div>
         <a class="back-home-button" href="https://seiryu1318.github.io/Ergosphere_Ryan/" aria-label="Ergosphere Ryan 메인 페이지로 돌아가기" title="Ergosphere Ryan 메인 페이지로 돌아가기">돌아가기</a>
         <a class="version-switch-button" href="https://seiryu1318.github.io/Ryan_record/" aria-label="PC 버전 열기" title="PC 버전 열기">PC 버전</a>
       </div>
@@ -3806,7 +3809,8 @@ body.mobile-build{font-size:15px}
 
 
 
-    <section class="tab-panel" id="analysisPanel" role="tabpanel" aria-labelledby="analysisTab">
+    <div id="analysisPanel">
+    <section class="tab-panel" id="inputPanel" role="tabpanel" aria-labelledby="analysisTab">
     <nav class="global-tools" aria-label="평가 방식">
       <div class="global-tool-group strictness-group">
         <span class="nav-label">평가 방식</span>
@@ -3954,7 +3958,10 @@ body.mobile-build{font-size:15px}
     <div class="sr-only" id="resultStatus" role="status" aria-live="polite" aria-atomic="true"></div>
     <span class="sr-only" id="detectedSubject" aria-hidden="true">분석 전</span>
     <span class="sr-only" id="detectedMeta" aria-hidden="true">교과 고유 수행 맥락 기반</span>
-    <section id="results" aria-labelledby="resultHeading">
+    </section>
+    <section id="resultPanel" role="tabpanel" aria-labelledby="resultsTab" hidden>
+    <article class="card panel result-empty" id="resultEmpty" hidden><h2>분석 결과</h2><button type="button" class="ghost-button" id="resultInputButton">기록 입력하기</button></article>
+    <section id="results" aria-labelledby="resultHeading" hidden>
       <h2 class="result-heading" id="resultHeading" tabindex="-1">분석 결과</h2>
       <article class="card panel self-review-panel" id="precisionReviewPanel" aria-labelledby="precisionReviewHeading" tabindex="-1">
         <div class="self-review-head">
@@ -3978,29 +3985,22 @@ body.mobile-build{font-size:15px}
       <article class="card panel duel-panel v22-duel-report" id="duelPanel" aria-label="라이언과의 대결 결과" tabindex="-1" hidden>
         <div class="v22-duel-head">
           <div>
-            <p class="evaluation-kicker">계열별 우수 기록과 비교</p>
             <h2 id="duelHeading">라이언과의 대결</h2>
-            <p>평가 영역을 따로 고르지 않고 문구부터 입력하면 입력 내용에 맞는 평가 영역을 찾습니다. 연계성, 학습 자세, 확장성, 교사 평가와 실제 행동의 연결을 100점으로 읽고, 선택 계열의 우수 기록 패턴과 비교합니다.</p>
           </div>
           <span class="duel-mode-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 3 8.2 8.2"/><path d="m3 4 2.7 7.1 2.2-2.2"/><path d="m20 3-8.2 8.2"/><path d="m21 4-2.7 7.1-2.2-2.2"/><path d="m9.5 18.5 2.5-2.5 2.5 2.5"/></svg>기록 비교</span>
         </div>
-        <h3 class="duel-profile-heading">선택 계열의 2, 3학년 우수 기록과 닮은 정도</h3>
-        <div class="duel-profile-grid" id="duelBenchmarkProfiles" aria-live="polite"><p>문구 분석 전입니다.</p></div>
         <section class="duel-total-card" aria-label="우수 기록과 비교한 점수">
-          <div class="duel-total-label"><span>우수 기록과 비교한 점수</span><span id="duelAreaLabel">입력 전</span><span id="duelProfileFit">입력 전</span></div>
+          <div class="duel-total-label"><span>비교 점수</span></div>
           <div class="duel-total-number"><strong id="duelTotalScore">—<small>/100</small></strong><span id="duelTotalGrade">—</span></div>
           <div class="duel-total-meter" id="duelTotalMeter" role="meter" aria-label="우수 기록과 비교한 점수" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
-          <p id="duelFitSummary">문구를 분석하면 계열별 우수 기록과 닮은 정도와 해석이 표시됩니다.</p>
+          <p id="duelFitSummary"></p>
         </section>
         <div class="duel-metric-grid" id="duelMetricGrid" aria-live="polite"><p>문구 분석 전입니다.</p></div>
-        <div class="duel-analysis-columns">
-          <section class="duel-analysis-box"><h3>잘된 점</h3><ul id="duelStrengths"><li>분석 전</li></ul></section>
-          <section class="duel-analysis-box"><h3>아쉬운 점</h3><ul id="duelWeaknesses"><li>분석 전</li></ul></section>
-          <section class="duel-analysis-box"><h3>우수 기록과 닮은 점</h3><ul id="duelFitDetails"><li>분석 전</li></ul></section>
-          <section class="duel-analysis-box"><h3>보완 조언</h3><ul id="duelAdvice"><li>분석 전</li></ul></section>
-        </div>
-        <p class="duel-quote" id="duelQuote">입력에서 직접 확인한 대표 장면이 여기에 표시됩니다.</p>
-        <p class="duel-note" id="duelNote"><strong>합격 가능성이나 학생 백분위가 아닙니다.</strong> 입력에서 직접 확인되는 장면과 우수 기록의 구조만 비교합니다.</p>
+        <div class="duel-quote" id="duelQuote" hidden></div>
+        <div class="duel-note duel-priority" id="duelNote" hidden></div>
+        <details class="duel-comparison-details"><summary>계열별 비교 기준</summary>
+          <div class="duel-profile-grid" id="duelBenchmarkProfiles"></div>
+        </details>
       </article>
       <div class="result-grid">
         <article class="card score-card">
@@ -4149,6 +4149,7 @@ body.mobile-build{font-size:15px}
     </section>
 
     </section>
+    </div>
 
     <section class="card usage-panel tab-panel" id="guidePanel" role="tabpanel" aria-labelledby="guideTab" hidden>
       <div class="v25-guide">
@@ -4209,7 +4210,7 @@ body.mobile-build{font-size:15px}
   (() => {
     "use strict";
 
-    const APP_VERSION = "모바일 ver.23";
+    const APP_VERSION = "모바일 ver.24";
 
     const AREA = {
       overall: {
@@ -8500,8 +8501,7 @@ body.mobile-build{font-size:15px}
       }
       els.results.classList.add("show");
       els.resultStatus.textContent = `분석 완료, ${grade.grade} 등급`;
-      els.results.scrollIntoView({ behavior: "auto", block: "start" });
-      els.resultHeading.focus({ preventScroll: true });
+
     }
 
     function copySummaryV02() {
@@ -8588,6 +8588,7 @@ body.mobile-build{font-size:15px}
       els.results.classList.remove("show");
       els.resultStatus.textContent = "";
       lastResult = null;
+      updateResultAvailability(false);
     }
 
     function updateSubjectSettingsSummary() {
@@ -8798,16 +8799,38 @@ body.mobile-build{font-size:15px}
     });
 
     const primaryTabs = [...document.querySelectorAll('.primary-tab[role="tab"]')];
+    const mobileSections = document.getElementById("reviewSectionSelect");
+    const sectionMap = {analysisTab:"analysis",resultsTab:"results",guideTab:"guide"};
+    const viewFor = {analysis:document.getElementById("analysisTab"),results:document.getElementById("resultsTab"),guide:document.getElementById("guideTab")};
+    const resultEmpty = document.getElementById("resultEmpty");
+    function updateResultAvailability(available = Boolean(lastResult && els.results.classList.contains("show"))) {
+      const inResults = document.body.dataset.reviewSection === "results";
+      if (resultEmpty) resultEmpty.hidden = !inResults || available;
+      els.results.hidden = !inResults || !available;
+    }
     function activatePrimaryTab(tab, moveFocus = false) {
+      const section = sectionMap[tab?.id] || "analysis";
+      const previous = document.body.dataset.reviewSection;
+      document.body.dataset.reviewSection = section;
       primaryTabs.forEach(item => {
         const active = item === tab;
         item.setAttribute("aria-selected", String(active));
         item.tabIndex = active ? 0 : -1;
-        const panel = document.getElementById(item.getAttribute("aria-controls"));
-        if (panel) panel.hidden = !active;
       });
-      if (moveFocus) tab.focus();
+      document.getElementById("analysisPanel").hidden = section === "guide";
+      document.getElementById("inputPanel").hidden = section !== "analysis";
+      document.getElementById("resultPanel").hidden = section !== "results";
+      document.getElementById("guidePanel").hidden = section !== "guide";
+      if (mobileSections) mobileSections.value = section;
+      updateResultAvailability();
+      if (section === "analysis" && v21EvaluationMode === "duel") v21ApplyDuelView();
+      if (previous !== section) window.scrollTo({top:0,behavior:"auto"});
+      if (moveFocus) tab.focus({preventScroll:true});
     }
+    mobileSections?.addEventListener("change",() => activatePrimaryTab(viewFor[mobileSections.value]));
+    document.getElementById("resultInputButton")?.addEventListener("click",() => {
+      activatePrimaryTab(viewFor.analysis); els.recordText.focus({preventScroll:true});
+    });
     primaryTabs.forEach((tab, index) => {
       tab.addEventListener("click", () => activatePrimaryTab(tab));
       tab.addEventListener("keydown", event => {
@@ -10391,7 +10414,7 @@ body.mobile-build{font-size:15px}
     setLevel=function(level){
       __setLevelV17Final(level);
       document.body.dataset.evaluationMode=level;
-      if(els.levelGuide)els.levelGuide.innerHTML=level==="normal"?"<strong>평범</strong>: 내부 A와 B는 우수, C와 미작성은 미흡으로 표시합니다.":"<strong>엄격</strong>: 영역별 A/B/C 기준과 ABC 교정표를 함께 적용합니다.";
+      if(els.levelGuide)els.levelGuide.innerHTML=level==="normal"?"<strong>평범</strong>: A와 B는 우수, C는 미흡으로 표시합니다.":"<strong>엄격</strong>: 학생이 한 일과 그 결과를 A/B/C로 구분합니다.";
     };
 
     window.__ryanQaFingerprintV18=(text,area)=>corpusGradeV18(text,area);
@@ -12186,10 +12209,10 @@ body.mobile-build{font-size:15px}
        every V21 QA hook intact, derives all quotations from the current input, and uses
        only anonymous structural fingerprints from the benchmark records. */
     const V22_METRIC_META = Object.freeze({
-      L:Object.freeze({label:"이전 활동 혹은 다른 영역과의 연계성",short:"이전학년, 타영역 연계",positive:"이전 경험이나 다른 영역의 배움을 현재 활동의 질문, 방법으로 연결합니다.",advice:"이전 학년 또는 다른 교과, 활동에서 얻은 질문이 현재 수행의 어떤 선택으로 이어졌는지 한 문장으로 연결하세요."}),
-      S:Object.freeze({label:"책 등 학습하는 자세",short:"책, 자료의 기능적 학습",positive:"책, 논문, 공식 자료를 단순 열거하지 않고 판단과 수행에 사용합니다.",advice:"자료명만 적지 말고, 그 자료에서 얻은 개념, 기준이 수행 방법이나 결론을 어떻게 바꾸었는지 쓰세요."}),
-      X:Object.freeze({label:"한 가지 활동에서 다른 활동으로의 확장성",short:"활동 확장, 개선",positive:"1차 결과의 한계를 점검하고 방법을 바꾸어 후속 활동으로 확장합니다.",advice:"1차 결론 뒤에 예상 밖 결과나 한계, 바꾼 방법, 실제 2차 활동과 달라진 결과를 차례로 붙이세요."}),
-      E:Object.freeze({label:"교사 평가와 실제 행동의 연결",short:"평가어와 관찰 행동의 대응",positive:"교사의 평가가 구체적인 상황, 행동, 결과 장면으로 뒷받침됩니다.",advice:"‘우수함’이나 ‘돋보임’ 같은 평가어 바로 앞에 학생의 선택, 실제 행동, 상대나 결과의 변화를 한 장면으로 제시하세요."})
+      L:Object.freeze({label:"앞선 활동과의 연결",short:"이전학년, 타영역 연계",positive:"이전 경험이나 다른 영역의 배움을 현재 활동의 질문, 방법으로 연결합니다.",advice:"이전 학년 또는 다른 교과, 활동에서 얻은 질문이 현재 수행의 어떤 선택으로 이어졌는지 한 문장으로 연결하세요."}),
+      S:Object.freeze({label:"자료를 활용한 과정",short:"책, 자료의 기능적 학습",positive:"책, 논문, 공식 자료를 단순 열거하지 않고 판단과 수행에 사용합니다.",advice:"자료명만 적지 말고, 그 자료에서 얻은 개념, 기준이 수행 방법이나 결론을 어떻게 바꾸었는지 쓰세요."}),
+      X:Object.freeze({label:"후속 활동과 개선",short:"활동 확장, 개선",positive:"1차 결과의 한계를 점검하고 방법을 바꾸어 후속 활동으로 확장합니다.",advice:"1차 결론 뒤에 예상 밖 결과나 한계, 바꾼 방법, 실제 2차 활동과 달라진 결과를 차례로 붙이세요."}),
+      E:Object.freeze({label:"학생 행동과 결과",short:"평가어와 관찰 행동의 대응",positive:"교사의 평가가 구체적인 상황, 행동, 결과 장면으로 뒷받침됩니다.",advice:"‘우수함’이나 ‘돋보임’ 같은 평가어 바로 앞에 학생의 선택, 실제 행동, 상대나 결과의 변화를 한 장면으로 제시하세요."})
     });
 
     const V22_TOTAL_WEIGHTS = Object.freeze({
@@ -12271,16 +12294,16 @@ body.mobile-build{font-size:15px}
     /* Only structural fingerprints are embedded.  Raw student records are never bundled. */
     const V22_BENCHMARK_PROFILES = Object.freeze({
       science:Object.freeze([
-        Object.freeze({key:"scienceRevision",title:"이공계 수리, 모델링형, 2→3학년",weights:{L:30,S:20,X:30,E:20},terms:["모형","모델","수식","함수","증명","계산","그래프","일반화","반례","오류"],pairs:[["모형","수정"],["계산","검산"],["그래프","해석"],["이전","적용"]],detail:"현상을 수리 모형으로 바꾸고 오류, 조건을 고친 뒤 새 맥락으로 옮기는 흐름"}),
-        Object.freeze({key:"scienceExperiment",title:"이공계 실험, 데이터형, 3학년",weights:{L:25,S:20,X:40,E:15},terms:["가설","변인","통제","측정","실험","데이터","오차","재실험","재측정","검증"],pairs:[["가설","검증"],["변인","통제"],["오차","수정"],["측정","다시"]],detail:"현장 문제를 가설–설계–측정–오차 수정–재검증으로 닫는 흐름"})
+        Object.freeze({key:"scienceRevision",title:"수리 모형으로 설명하기",weights:{L:30,S:20,X:30,E:20},terms:["모형","모델","수식","함수","증명","계산","그래프","일반화","반례","오류"],pairs:[["모형","수정"],["계산","검산"],["그래프","해석"],["이전","적용"]],detail:"현상을 수리 모형으로 바꾸고 오류, 조건을 고친 뒤 새 맥락으로 옮기는 흐름"}),
+        Object.freeze({key:"scienceExperiment",title:"실험으로 결과 확인하기",weights:{L:25,S:20,X:40,E:15},terms:["가설","변인","통제","측정","실험","데이터","오차","재실험","재측정","검증"],pairs:[["가설","검증"],["변인","통제"],["오차","수정"],["측정","다시"]],detail:"현장 문제를 가설–설계–측정–오차 수정–재검증으로 닫는 흐름"})
       ]),
       humanities:Object.freeze([
-        Object.freeze({key:"humanitiesEvidence",title:"인문계 사료, 논증형, 2→3학년",weights:{L:30,S:40,X:15,E:15},terms:["원문","원전","사료","공식 자료","통계","관점","맥락","반론","전제","비판"],pairs:[["자료","비교"],["사료","맥락"],["반론","수정"],["공식","한계"]],detail:"문제의식을 원문, 사료, 공식 자료로 검증하고 전제와 반론까지 갱신하는 흐름"}),
-        Object.freeze({key:"humanitiesSociety",title:"인문계 사회문제, 정책 적용형, 3학년",weights:{L:25,S:35,X:20,E:20},terms:["사회 문제","공개 지표","정책","제도","지역","불평등","이해관계자","효과","부작용","대안"],pairs:[["지표","비교"],["정책","부작용"],["이해관계자","대안"],["자료","한계"]],detail:"사회문제를 공식 지표와 여러 관점으로 검토하고 조건 있는 정책 대안으로 옮기는 흐름"})
+        Object.freeze({key:"humanitiesEvidence",title:"자료로 주장을 뒷받침하기",weights:{L:30,S:40,X:15,E:15},terms:["원문","원전","사료","공식 자료","통계","관점","맥락","반론","전제","비판"],pairs:[["자료","비교"],["사료","맥락"],["반론","수정"],["공식","한계"]],detail:"문제의식을 원문, 사료, 공식 자료로 검증하고 전제와 반론까지 갱신하는 흐름"}),
+        Object.freeze({key:"humanitiesSociety",title:"사회문제의 대안 살피기",weights:{L:25,S:35,X:20,E:20},terms:["사회 문제","공개 지표","정책","제도","지역","불평등","이해관계자","효과","부작용","대안"],pairs:[["지표","비교"],["정책","부작용"],["이해관계자","대안"],["자료","한계"]],detail:"사회문제를 공식 지표와 여러 관점으로 검토하고 조건 있는 정책 대안으로 옮기는 흐름"})
       ]),
       business:Object.freeze([
-        Object.freeze({key:"businessConsumer",title:"상경계 소비자, 사용자 검증형, 3학년",weights:{L:25,S:20,X:40,E:15},terms:["소비자","사용자","설문","면담","시제품","시안","모의","반응","불편","피드백"],pairs:[["설문","면담"],["시제품","반응"],["피드백","수정"],["사용자","불편"]],detail:"소비자 문제를 정량, 정성 자료로 정의하고 시안, 모의 적용 뒤 반응으로 수정하는 흐름"}),
-        Object.freeze({key:"businessDecision",title:"상경계 경제, 의사결정형, 3학년",weights:{L:25,S:25,X:35,E:15},terms:["시장","비용","편익","수요","대안","이해관계자","수치","전략","실행","판단"],pairs:[["비용","편익"],["대안","비교"],["이해관계자","판단"],["실행","수정"]],detail:"비용, 편익과 이해관계자를 비교해 대안을 선택하고 실행 결과로 판단을 수정하는 흐름"})
+        Object.freeze({key:"businessConsumer",title:"사용자 반응 살피기",weights:{L:25,S:20,X:40,E:15},terms:["소비자","사용자","설문","면담","시제품","시안","모의","반응","불편","피드백"],pairs:[["설문","면담"],["시제품","반응"],["피드백","수정"],["사용자","불편"]],detail:"소비자 문제를 정량, 정성 자료로 정의하고 시안, 모의 적용 뒤 반응으로 수정하는 흐름"}),
+        Object.freeze({key:"businessDecision",title:"대안을 비교하고 선택하기",weights:{L:25,S:25,X:35,E:15},terms:["시장","비용","편익","수요","대안","이해관계자","수치","전략","실행","판단"],pairs:[["비용","편익"],["대안","비교"],["이해관계자","판단"],["실행","수정"]],detail:"비용, 편익과 이해관계자를 비교해 대안을 선택하고 실행 결과로 판단을 수정하는 흐름"})
       ])
     });
 
@@ -12360,10 +12383,9 @@ body.mobile-build{font-size:15px}
 
     function v22ExactSentences(text) {
       const source = String(text || "");
-      const matches = source.match(/[^.!?。！？\n]+(?:[.!?。！？]+|$)/g) || [];
-      return matches.map(item => item.trim()).filter(item => item && source.includes(item));
+      return window.RyanRecordReview?.exactSentences(source)
+        || source.split(/(?<=[.!?。！？])\s+|\r?\n/u).map(unit => unit.trim()).filter(Boolean);
     }
-
     function v22TermCount(sentence,terms) {
       return terms.reduce((sum,term) => sum + (sentence.includes(term) ? 1 : 0),0);
     }
@@ -12387,8 +12409,9 @@ body.mobile-build{font-size:15px}
     }
 
     function v22RoleAudit(text) {
-      const source = String(text || "").replace(/\s+/g," ").trim();
-      const sentences = v22ExactSentences(source);
+      const source = String(text || "").trim();
+      const exactScan = window.RyanRecordReview?.scanComparison(source);
+      const sentences = exactScan?.sentences || v22ExactSentences(source);
       const negated = sentence => /(않았|않음|없고|없음|못했|미실시|기록하지|아직|예정|계획일 뿐|생각임|하고자 함)/.test(sentence);
       const positive = sentences.filter(sentence => !negated(sentence));
       const first = expression => positive.find(sentence => expression.test(sentence)) || "";
@@ -12398,7 +12421,7 @@ body.mobile-build{font-size:15px}
         && /(정하고|정해|실시|수행|진행|분류하고|대조하여|비교하여|분석하여|설계|제작|기록|수집|적용|모의 실행|검증)/.test(sentence)
         && !/(다시|재검증|재측정|재실험|2차|두 번째|전후)/.test(sentence)
         && !(/(?:교과서|도서|책|논문|원문|사료|공개 자료).*(?:정리|이해)함/.test(sentence) && !/(실시|수행|진행|제작|측정하여|분류하고|적용해)/.test(sentence))) || "";
-      const conclusion = positive.find(sentence => !/(다시|재검증|재측정|재실험|2차|두 번째|전후)/.test(sentence)
+      const conclusion = exactScan ? exactScan.result : positive.find(sentence => !/(다시|재검증|재측정|재실험|2차|두 번째|전후)/.test(sentence)
         && (/(첫\s*(?:분석|결론)|1차|잠정\s*결론|결론을\s*(?:도출|제시)|결과를\s*확인|범위\s*있는\s*결론|대안과\s*선택\s*이유|첫\s*대안)/.test(sentence)
           || (/(측정|분석|실험|설문|자료|표|그래프|관찰)/.test(sentence) && /(?:차이|경향|변화|효과|반응|관계|오차\s*범위|값).*(?:확인|도출|나타|줄어|증가|감소)/.test(sentence)))) || "";
       const reflection = positive.find(sentence => !/(다시|재검증|재측정|재실험|2차|두 번째)/.test(sentence)
@@ -12408,7 +12431,7 @@ body.mobile-build{font-size:15px}
       const evaluation = first(/돋보|우수|인상적|탁월|모범|뛰어|성실|역량|태도|능력|발휘|기여|주도적|책임감/);
       const action = first(/제안|조정|설명|도움|수행|분석|비교|측정|수정|확인|작성|제작|공유|협업|경청|배려|설득|지원|실천|운영|정함|정리함|기록함|세움/);
       const impact = first(/결과|변화|증가|감소|향상|해결|완성|도출|반응|성과|기여|범위|선택\s*이유/);
-      return {source,sentences,positive,negated,trigger,learning,process,conclusion,reflection,secondActivity,evaluation,action,impact};
+      return {source,sentences,positive,negated,trigger,learning,process:process || exactScan?.method || "",conclusion,reflection,secondActivity,evaluation,action,impact,exactScan};
     }
 
     function v22CapState(text,audit) {
@@ -12458,12 +12481,14 @@ body.mobile-build{font-size:15px}
         E:(roles.process ? 30 : 0) + (roles.conclusion ? 30 : 0) + (roles.action ? 15 : 0) + (roles.impact ? 15 : 0) + (roles.secondActivity ? 10 : 0)
       };
       if (roles.evaluation && !roles.process && !roles.impact) raw.E = Math.min(raw.E,25);
-      const evidence = {L:roles.trigger,S:roles.learning,X:roles.secondActivity || roles.reflection,E:roles.conclusion || roles.process};
+      const scanned = roles.exactScan;
+      const evidence = scanned ? {L:scanned.trigger,S:scanned.learning,X:scanned.next || scanned.reflection,E:scanned.result || scanned.method}
+        : {L:roles.trigger,S:roles.learning,X:roles.secondActivity || roles.reflection,E:roles.conclusion || roles.process};
       return ["L","S","X","E"].map(key => {
         const metricCap = capState?.metricCaps?.[key] ?? 100;
         const score = Math.min(v22Clamp(raw[key]),metricCap);
-        const direct = evidence[key] || v22EvidenceFor(source,key,cards);
-        return {key,label:V22_METRIC_META[key].label,short:V22_METRIC_META[key].short,score,evidence:direct && source.includes(direct) ? v22InputFragment(direct,180) : ""};
+        const direct = evidence[key] || (!scanned && v22EvidenceFor(source,key,cards));
+        return {key,label:V22_METRIC_META[key].label,short:V22_METRIC_META[key].short,score,evidence:direct && source.includes(direct) ? direct : ""};
       });
     }
 
@@ -12649,7 +12674,7 @@ body.mobile-build{font-size:15px}
           if (lowCount >= 3) capReasons.push("네 가지 기준 가운데 세 가지 이상이 충분히 드러나지 않음");
           else if (lowCount === 2) capReasons.push("네 가지 기준 가운데 두 가지가 충분히 드러나지 않음");
           const noSource = target === "business" && area === "behavior";
-          return {metrics,totalScore,grade,internalGrade:grade,weights,profiles,strengths:strengths.slice(0,3),weaknesses:weaknesses.slice(0,3),fit:fit.slice(0,3),advice:advice.slice(0,3),area,target,areaLabel:v22AreaLabel(area),targetLabel:v22TargetLabel(target),strongestEvidence,cap:Math.min(capState.cap,consistencyCap),capReasons,capIds:capState.capIds || [],lowCount,status:noSource ? "NO_SOURCE_EVIDENCE" : "OK",noSourceEvidence:noSource ? {status:"NO_SOURCE_EVIDENCE",positiveBenchmarkUse:"forbidden"} : null};
+          return {metrics,totalScore,grade,internalGrade:grade,weights,profiles,strengths:strengths.slice(0,3),weaknesses:weaknesses.slice(0,3),fit:fit.slice(0,3),advice:advice.slice(0,3),area,target,areaLabel:v22AreaLabel(area),targetLabel:v22TargetLabel(target),strongestEvidence,scannedEvidence:capState.roles.exactScan,cap:Math.min(capState.cap,consistencyCap),capReasons,capIds:capState.capIds || [],lowCount,status:noSource ? "NO_SOURCE_EVIDENCE" : "OK",noSourceEvidence:noSource ? {status:"NO_SOURCE_EVIDENCE",positiveBenchmarkUse:"forbidden"} : null};
     }
 
     function v22SourceAnchors(text,report) {
@@ -12794,30 +12819,15 @@ body.mobile-build{font-size:15px}
           const grid = document.getElementById("duelMetricGrid");
           if (grid) grid.innerHTML = report.metrics.map(metric => {
             const evidence = metric.evidence && rawText.includes(metric.evidence) ? metric.evidence : "";
-            return `<section class="duel-metric-card" data-metric="${metric.key}"><span class="duel-metric-icon">${v22MetricIcon(metric.key)}</span><div class="duel-metric-copy"><h3>${escapeHtml(metric.label)}</h3></div><strong class="duel-metric-score">${metric.score}<small>/100</small></strong><div class="duel-metric-meter" role="meter" aria-label="${escapeHtml(metric.label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${metric.score}"><span style="width:${metric.score}%"></span></div><p>${evidence ? `<strong class="duel-emphasis">“${escapeHtml(evidence)}”</strong>` : "입력에서 직접 확인할 근거가 부족합니다."}</p></section>`;
+            return `<section class="duel-metric-card" data-metric="${metric.key}"><span class="duel-metric-icon">${v22MetricIcon(metric.key)}</span><div class="duel-metric-copy"><h3>${escapeHtml(metric.label)}</h3></div><strong class="duel-metric-score">${metric.score}<small>/100</small></strong><div class="duel-metric-meter" role="meter" aria-label="${escapeHtml(metric.label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${metric.score}"><span style="width:${metric.score}%"></span></div>${evidence && metric.key !== "E" ? `<p class="duel-evidence-text">${escapeHtml(evidence)}</p>` : ""}</section>`;
           }).join("");
           const total = document.getElementById("duelTotalScore");
           const grade = document.getElementById("duelTotalGrade");
           const meter = document.getElementById("duelTotalMeter");
-          const summary = document.getElementById("duelFitSummary");
           if (total) total.innerHTML = `${report.totalScore}<small>/100</small>`;
           if (grade) grade.textContent = report.grade;
           if (meter) { meter.setAttribute("aria-valuenow",String(report.totalScore)); meter.firstElementChild?.style.setProperty("width",`${report.totalScore}%`); }
-          if (summary) summary.innerHTML = v27DuelText(report.fit[0] || "비교할 수 있는 장면이 부족합니다.");
-          v22RenderList("duelStrengths",report.strengths);
-          v22RenderList("duelWeaknesses",report.weaknesses);
-          v22RenderList("duelFitDetails",report.fit);
-          v22RenderList("duelAdvice",report.advice);
-          const strongestEvidence = report.strongestEvidence && rawText.includes(report.strongestEvidence) ? report.strongestEvidence : "";
-          const quote = document.getElementById("duelQuote");
-          if (quote) quote.innerHTML = strongestEvidence
-            ? `<span>대표 장면</span><strong class="duel-emphasis">“${escapeHtml(strongestEvidence)}”</strong>`
-            : "입력에서 직접 확인할 수 있는 대표 장면이 부족합니다.";
-          const note = document.getElementById("duelNote");
-          const firstReason = report.capReasons[0] || "";
-          if (note) note.innerHTML = firstReason
-            ? `<strong>먼저 보완할 부분</strong> ${escapeHtml(firstReason)}. <span>이 점수는 합격 가능성을 뜻하지 않습니다.</span>`
-            : "<span>이 점수는 합격 가능성을 뜻하지 않습니다.</span>";
+          window.RyanRecordReview?.renderComparison(report,rawText,document);
           panel.dataset.ready = "true";
     }
 
@@ -12854,7 +12864,7 @@ body.mobile-build{font-size:15px}
           const heading = document.getElementById("resultHeading");
           if (heading) heading.textContent = "라이언과의 대결 결과";
           const guide = document.getElementById("levelGuide");
-          if (guide) guide.textContent = "문구를 입력한 뒤 분석하세요.";
+          if (guide) guide.innerHTML = "<strong>라이언과의 대결</strong>: 앞선 활동과의 연결, 자료 활용, 후속 활동, 학생 행동의 근거를 네 가지 기준으로 살펴 100점으로 비교합니다.";
           if (lastResult?.v20) v22RenderDuel(lastResult);
     }
 
@@ -12905,6 +12915,8 @@ body.mobile-build{font-size:15px}
         delete els.results.dataset.canonicalGrade;
         delete els.results.dataset.canonicalScore;
         delete els.results.dataset.engine;
+        activatePrimaryTab(viewFor.results);
+        els.resultHeading.focus({preventScroll:true});
         return;
       }
       if (!window.RyanRecordReview) return;
@@ -12914,6 +12926,8 @@ body.mobile-build{font-size:15px}
       const canonical = window.RyanRecordReview.assess({text:rawText,area,mode:selectedLevel,subject:reviewSubject,courseFit});
       result.recordReview = canonical;
       window.RyanRecordReview.render(canonical,document);
+      activatePrimaryTab(viewFor.results);
+      els.resultHeading.focus({preventScroll:true});
     };
 
     const duelButtonV22 = document.getElementById("duelButton");
@@ -13269,7 +13283,6 @@ body.mobile-build{font-size:15px}
       panel.append(actions);
     }
 
-    selectAnalysisTab();
     installSubjectDialogClose();
     installEnterShortcut();
     compactResultActions();

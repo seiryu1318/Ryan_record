@@ -54,7 +54,7 @@ if (server) await new Promise((resolveListen, rejectListen) => {
 const baseUrl = new URL(live ? "https://seiryu1318.github.io/Ryan_record/" : "http://127.0.0.1:" + server.address().port + "/");
 const siteUrl = route => new URL(route.replace(/^\//, ""), baseUrl);
 const allowedRequests = new Set([...staticFiles.keys(), "/favicon.ico",
-  "/record-review.css?v=35", "/record-review.js?v=35"].map(route => siteUrl(route).href));
+  "/record-review.css?v=35.1", "/record-review.js?v=35"].map(route => siteUrl(route).href));
 
 const inquiry = "수온에 따라 효모 발효 속도가 달라지는 이유를 질문함. 교과서의 효소 단원을 참고해 온도만 다르게 설정하고 같은 양의 효모에서 발생한 기체 부피를 세 차례 측정함. 측정값을 표로 비교하여 수온이 높은 조건에서 기체 부피가 더 큰 이유를 효소 활성과 연결해 해석함. 첫 측정에서 온도계 위치가 달라 오차가 생긴 한계를 확인하고 센서 위치를 통일해 재측정하여 편차가 줄어든 결과를 표에 표시함.";
 const action = "교내 기후 활동에서 자료 정리 역할을 맡아 기상 관측 자료 두 종류를 날짜별로 정리하고 표로 작성함. 완성한 표를 모둠 발표 자료로 제출함.";
@@ -319,6 +319,20 @@ async function assertCenteredFlow(page, label, { results = false, duel = false }
     }
   }
   if (duel) assert.equal(layout.duelPanels.length, 2, label + " duel total and metrics stay visible");
+}
+
+async function assertStickyMenuClickable(page, label) {
+  const clickable = await page.evaluate(() => {
+    const menu = matchMedia("(max-width: 640px)").matches
+      ? document.querySelector("#reviewSectionSelect")
+      : document.querySelector("#guideTab");
+    window.scrollTo(0, 140);
+    const { left, top, width, height } = menu.getBoundingClientRect();
+    const hit = document.elementFromPoint(left + width / 2, top + height / 2);
+    window.scrollTo(0, 0);
+    return menu.contains(hit);
+  });
+  assert.ok(clickable, label + " evaluation controls do not cover the sticky menu");
 }
 
 async function pasteInField(textarea, text, { html = "", range = null } = {}) {
@@ -844,6 +858,7 @@ async function openPage(browser, { route, mobile, device, label, reducedMotion =
     if (live) assert.match(await page.title(), mobile ? /ver\.28$/ : /ver\.35$/);
     await assertBrandAndBackground(page, label);
     await assertCenteredFlow(page, label + " initial screen");
+    await assertStickyMenuClickable(page, label);
     await assertLightweightSections(page, [".global-tools", ".setup-card"], label + " input");
     assert.ok(await page.locator("#recordText").evaluate(field => parseFloat(getComputedStyle(field).borderTopWidth) > 0), "text field keeps its visible boundary");
     await assertMotionPolicy(page, label + " initial screen");
@@ -1207,6 +1222,7 @@ async function runOfflineCopies(browser) {
       await page.goto(pathToFileURL(join(root, relative)).href, { waitUntil: "load" });
       await page.waitForFunction(() => Boolean(window.RyanRecordReview));
       if (!baseline) await openReviewSection(page, "analysis");
+      if (!baseline) await assertStickyMenuClickable(page, relative);
       await page.locator("[data-area='overall']").click();
       await page.locator("[data-target='science']").click();
       if (!baseline) await openReviewSection(page, "analysis");

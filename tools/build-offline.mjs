@@ -10,11 +10,11 @@ const imageData = bytes => "data:image/jpeg;base64,"+bytes.toString("base64");
 const css = cssSource.replaceAll("./background2.jpg",imageData(background));
 if (/<\/style/i.test(css) || /<\/script/i.test(js)) throw new Error("Unexpected closing tag in assets");
 for (const [entry, path, output] of [
-  ["index.html","./","라이언의_기록_분석_ver.35.html"],
-  ["mobile/index.html","../","mobile/라이언의_기록_분석_모바일_ver.28.html"],
+  ["index.html","./","라이언의_기록_분석_ver.36.html"],
+  ["mobile/index.html","../","mobile/라이언의_기록_분석_모바일_ver.29.html"],
 ]) {
   const input = await read(entry);
-  const style = '<link rel="stylesheet" href="'+path+'record-review.css?v=35.1">';
+  const style = '<link rel="stylesheet" href="'+path+'record-review.css?v=36">';
   const script = '<script defer src="'+path+'record-review.js?v=35"></script>';
   const brand = 'src="'+path+'goom.jpg"';
   if (!input.includes(style) || !input.includes(script) || !input.includes(brand) || css === cssSource) throw new Error("Missing asset link in "+entry);

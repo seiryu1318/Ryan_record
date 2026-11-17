@@ -54,7 +54,7 @@ if (server) await new Promise((resolveListen, rejectListen) => {
 const baseUrl = new URL(live ? "https://seiryu1318.github.io/Ryan_record/" : "http://127.0.0.1:" + server.address().port + "/");
 const siteUrl = route => new URL(route.replace(/^\//, ""), baseUrl);
 const allowedRequests = new Set([...staticFiles.keys(), "/favicon.ico",
-  "/record-review.css?v=35.1", "/record-review.js?v=35"].map(route => siteUrl(route).href));
+  "/record-review.css?v=36", "/record-review.js?v=35"].map(route => siteUrl(route).href));
 
 const inquiry = "수온에 따라 효모 발효 속도가 달라지는 이유를 질문함. 교과서의 효소 단원을 참고해 온도만 다르게 설정하고 같은 양의 효모에서 발생한 기체 부피를 세 차례 측정함. 측정값을 표로 비교하여 수온이 높은 조건에서 기체 부피가 더 큰 이유를 효소 활성과 연결해 해석함. 첫 측정에서 온도계 위치가 달라 오차가 생긴 한계를 확인하고 센서 위치를 통일해 재측정하여 편차가 줄어든 결과를 표에 표시함.";
 const action = "교내 기후 활동에서 자료 정리 역할을 맡아 기상 관측 자료 두 종류를 날짜별로 정리하고 표로 작성함. 완성한 표를 모둠 발표 자료로 제출함.";
@@ -749,6 +749,23 @@ async function openReviewSection(page, section) {
   if (!baseline) await page.waitForFunction(name => document.body.dataset.reviewSection === name, section);
 }
 
+async function assertBrandReturnsToInput(page, draft, control) {
+  const url = page.url();
+  const brand = page.getByRole("link", { name: "라이언의 기록 분석 홈" });
+  if (control === "keyboard") {
+    await brand.focus();
+    await page.keyboard.press("Enter");
+  } else {
+    await brand.locator(control).click();
+  }
+  await page.locator("#inputPanel").waitFor({ state: "visible" });
+  assert.equal(page.url(), url, "the brand returns home within the current page");
+  assert.equal(await page.locator("#recordText").inputValue(), draft, "brand activation preserves the draft");
+  assert.equal(await page.locator("#analysisTab").getAttribute("aria-selected"), "true");
+  assert.equal(await page.locator("#reviewSectionSelect").inputValue(), "analysis");
+  assert.equal(await page.evaluate(() => window.scrollY), 0, "the input panel is shown from the top");
+}
+
 async function analyze(page, text, { enter = false, duel = false } = {}) {
   const expectCanonical = checkRubric && !duel;
   if (!baseline) await openReviewSection(page, "analysis");
@@ -855,7 +872,7 @@ async function openPage(browser, { route, mobile, device, label, reducedMotion =
   await page.waitForFunction(() => Boolean(document.getElementById("recordText")));
   await assertFitsViewport(page, label + " initial screen");
   if (!baseline) {
-    if (live) assert.match(await page.title(), mobile ? /ver\.28$/ : /ver\.35$/);
+    if (live) assert.match(await page.title(), mobile ? /ver\.29$/ : /ver\.36$/);
     await assertBrandAndBackground(page, label);
     await assertCenteredFlow(page, label + " initial screen");
     await assertStickyMenuClickable(page, label);
@@ -980,10 +997,10 @@ async function runModeFlow(browser, options) {
       await assertReadableContrast(page, ["#precisionGrade", "#precisionRationale"], label + " ordinary result");
       await assertTrackProfile(page, true);
       assert.equal(await textarea.isVisible(), false, "records are not shown alongside results");
+      await assertBrandReturnsToInput(page, inquiry, ".brand-logo");
       await openReviewSection(page, "guide");
       assert.equal(await page.locator("#results").isVisible(), false);
-      await openReviewSection(page, "analysis");
-      assert.equal(await textarea.inputValue(), inquiry, "navigating back preserves the entered record");
+      await assertBrandReturnsToInput(page, inquiry, "h1");
       assert.equal(await page.locator("[data-area='overall']").getAttribute("aria-pressed"), "true");
       assert.equal(await page.locator("[data-level='strict']").getAttribute("aria-pressed"), "true");
       await openReviewSection(page, "results");
@@ -994,6 +1011,8 @@ async function runModeFlow(browser, options) {
         return { scroll: window.scrollY, top: header.getBoundingClientRect().top };
       });
       assert.ok(sticky.scroll < 100 || (sticky.top >= -1 && sticky.top <= 20), label + " header remains visible while scrolling");
+      await assertBrandReturnsToInput(page, inquiry, "keyboard");
+      await openReviewSection(page, "results");
     }
     const middle = await analyze(page, action);
     const weak = await analyze(page, praise);
@@ -1210,8 +1229,8 @@ async function runReducedMotion(browser, options) {
 
 async function runOfflineCopies(browser) {
   const numberedCopies = [
-    ["라이언의_기록_분석_ver.35.html", { width: 1366, height: 900 }],
-    [join("mobile", "라이언의_기록_분석_모바일_ver.28.html"), { width: 390, height: 844 }],
+    ["라이언의_기록_분석_ver.36.html", { width: 1366, height: 900 }],
+    [join("mobile", "라이언의_기록_분석_모바일_ver.29.html"), { width: 390, height: 844 }],
   ];
   for (const [relative, viewport] of numberedCopies) {
     const context = await browser.newContext({ viewport, offline: true });
@@ -1229,6 +1248,7 @@ async function runOfflineCopies(browser) {
       await page.locator("[data-level='strict']").click();
       const result = await analyze(page, inquiry);
       assert.equal(result.grade, "A");
+      await assertBrandReturnsToInput(page, inquiry, "keyboard");
       await analyze(page, rewriteInput);
       const example = page.locator("#retakeExamplePanel");
       if (await example.getAttribute("open") === null) await example.locator("summary").click();

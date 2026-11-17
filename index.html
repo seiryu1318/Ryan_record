@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>라이언의 기록 분석 ver.35</title>
+  <title>라이언의 기록 분석 ver.36</title>
   <style>
 
 /* noto-sans-kr-cyrillic-wght-normal */
@@ -3925,7 +3925,7 @@
       #duelPanel .duel-analysis-columns { grid-template-columns:1fr !important; }
     }
   </style>
-  <link rel="stylesheet" href="./record-review.css?v=35.1">
+  <link rel="stylesheet" href="./record-review.css?v=36">
   <script defer src="./record-review.js?v=35"></script>
 </head>
 <body>
@@ -3938,11 +3938,10 @@
   </div>
   <main class="app-shell">
     <header class="topbar">
-      <div class="brand">
+      <a class="brand" id="reviewHomeLink" href="./" aria-label="라이언의 기록 분석 홈">
         <img class="brand-logo" src="./goom.jpg" alt="" width="56" height="56">
         <div class="brand-copy"><h1>라이언의 기록 분석</h1></div>
-
-      </div>
+      </a>
 
       <div class="topbar-actions"><nav class="primary-tabs review-nav" role="tablist" aria-label="주요 메뉴">
       <button class="primary-tab" id="analysisTab" type="button" role="tab" aria-selected="true" aria-controls="inputPanel" tabindex="0">기록 입력</button>
@@ -4361,7 +4360,7 @@
   (() => {
     "use strict";
 
-    const APP_VERSION = "ver.35";
+    const APP_VERSION = "ver.36";
 
     const AREA = {
       overall: {
@@ -8981,6 +8980,15 @@
       if (previous !== section) window.scrollTo({top:0,behavior:"auto"});
       if (moveFocus) tab.focus({preventScroll:true});
     }
+    document.getElementById("reviewHomeLink").addEventListener("click", event => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      if (document.body.dataset.reviewSection === "analysis") {
+        window.scrollTo({ top: 0, behavior: "auto" });
+      } else {
+        activatePrimaryTab(viewFor.analysis);
+      }
+    });
     mobileSections?.addEventListener("change",() => activatePrimaryTab(viewFor[mobileSections.value]));
     document.getElementById("resultInputButton")?.addEventListener("click",() => {
       activatePrimaryTab(viewFor.analysis); els.recordText.focus({preventScroll:true});
